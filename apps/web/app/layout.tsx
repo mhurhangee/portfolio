@@ -1,8 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google"
 import type { Metadata } from "next";
-import Link from "next/link";
-
-import "@workspace/ui/globals.css"
+import "@workspace/ui/styles/globals.css"
 import { Providers } from "@/components/providers"
 
 const fontSans = Geist({
@@ -16,8 +14,16 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Mastra.ai Demo",
+  title: "Superfier: mastra.ai",
   description: "Demo application showcasing Mastra.ai capabilities",
+  icons: {
+    icon: [
+      {
+        url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦸</text></svg>",
+        type: "image/svg+xml",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -30,25 +36,11 @@ export default function RootLayout({
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans min-h-screen bg-background text-foreground antialiased`}
       >
-
-        <div className="relative flex min-h-screen flex-col">
-          <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
-              <Link href="/" className="mr-6 flex items-center space-x-2">
-                <span className="font-bold font-mono ml-8">mastra.ai agents demo</span>
-              </Link>
-            </div>
-          </header>
-          <main className="flex-1">
+        <div className="relative min-h-screen bg-gradient-to-b from-background to-background via-accent/10">
+        <div className="absolute inset-0 w-full h-full z-0  bg-grid-pattern" />
+          <main className="relative">
             <Providers>{children}</Providers>
           </main>
-          <footer className="border-t py-6 md:py-0">
-            <div className="container flex h-14 items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Built with Next.js and Mastra.ai
-              </p>
-            </div>
-          </footer>
         </div>
       </body>
     </html>
