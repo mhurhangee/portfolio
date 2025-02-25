@@ -12,7 +12,7 @@ interface SettingsSidebarProps {
 
 export function SettingsSidebar({ children }: SettingsSidebarProps) {
   return (
-    <Sidebar side="right">
+    <Sidebar side="right" variant="inset">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Settings</SidebarGroupLabel>

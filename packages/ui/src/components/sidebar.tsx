@@ -5,7 +5,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 
-import { useIsMobile } from "../hooks/use-mobile.js"
+import { useIsMobile } from "@workspace/ui/hooks/use-mobile"
 import { cn } from "@workspace/ui/lib/utils"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
@@ -27,11 +27,11 @@ const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
 interface SidebarContextValue {
-  state: "expanded" | "collapsed"
+  state: string
   leftOpen: boolean
   rightOpen: boolean
-  setLeftOpen: (open: boolean) => void
-  setRightOpen: (open: boolean) => void
+  setLeftOpen: (value: boolean) => void
+  setRightOpen: (value: boolean) => void
   isMobile: boolean
   leftSheetOpen: boolean
   rightSheetOpen: boolean
@@ -42,14 +42,6 @@ interface SidebarContextValue {
 const SidebarContext = React.createContext<SidebarContextValue | undefined>(
   undefined
 )
-
-interface SidebarProviderProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode
-  defaultLeftOpen?: boolean
-  defaultRightOpen?: boolean
-  onLeftOpenChange?: (open: boolean) => void
-  onRightOpenChange?: (open: boolean) => void
-}
 
 const SidebarProvider = React.forwardRef<
   HTMLDivElement,
@@ -106,7 +98,7 @@ const SidebarProvider = React.forwardRef<
         leftSheetOpen,
         rightSheetOpen,
         setLeftSheetOpen,
-        setRightSheetOpen,
+        setRightSheetOpen
       }),
       [leftOpen, rightOpen, isMobile, setLeftOpen, setRightOpen, leftSheetOpen, rightSheetOpen]
     )
@@ -138,7 +130,7 @@ const SidebarProvider = React.forwardRef<
 )
 SidebarProvider.displayName = "SidebarProvider"
 
-const useSidebar = () => {
+function useSidebar() {
   const context = React.useContext(SidebarContext)
   if (!context) {
     throw new Error("useSidebar must be used within a SidebarProvider")
@@ -226,6 +218,12 @@ const Sidebar = React.forwardRef<
       )
     }
 
+    const variantValue = React.useMemo(() => {
+      if (!isOpen) return "hidden"
+      if (isMobile) return "default"
+      return "default"
+    }, [isOpen, isMobile])
+
     return (
       <div
         ref={ref}
@@ -252,6 +250,7 @@ const Sidebar = React.forwardRef<
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+            // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -293,7 +292,6 @@ const SidebarTrigger = React.forwardRef<
   return (
     <Button
       ref={ref}
-      data-sidebar="trigger"
       variant="ghost"
       size="icon"
       className={cn("h-7 w-7", className)}
