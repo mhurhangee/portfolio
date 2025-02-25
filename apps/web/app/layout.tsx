@@ -1,5 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google"
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 import "@workspace/ui/styles/globals.css"
 import { Providers } from "@/components/providers"
 
@@ -24,22 +24,25 @@ export const metadata: Metadata = {
       },
     ],
   },
-};
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans min-h-screen bg-background text-foreground antialiased`}
       >
         <div className="relative min-h-screen bg-gradient-to-b from-background to-background via-accent/10">
-        <div className="absolute inset-0 w-full h-full z-0  bg-grid-pattern" />
+          <div className="absolute inset-0 w-full h-full z-0  bg-grid-pattern" />
           <main className="relative">
-            <Providers>{children}</Providers>
+            <Providers>
+                {children}
+            </Providers>
           </main>
         </div>
       </body>
