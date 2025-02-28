@@ -46,7 +46,7 @@ export function NavBar() {
   return (
     <>
       <motion.nav
-        className="fixed top-0 left-0 right-0 h-12 flex items-center justify-between px-4 md:px-8 z-[1000] bg-gradient-to-r from-background to-background/80 backdrop-blur-sm text-foreground"
+        className="fixed top-0 left-0 right-0 h-12 flex items-center justify-between px-4 md:px-8 z-[1000] backdrop-blur-sm text-foreground"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 1.0 }}

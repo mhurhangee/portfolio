@@ -7,7 +7,7 @@ import { ModeToggle } from "../components/mode-toggle"
 import { FlipWords } from "@workspace/ui/components/flipwords"
 import { User2, Bot } from "lucide-react"
 import { container, item } from "../lib/animation"
-
+import { Spotlight } from "@workspace/ui/components/spotlight"
 export default function Home() {
   return (
     <div className="flex min-h-[100dvh] flex-col items-center justify-center px-4">
@@ -21,6 +21,7 @@ export default function Home() {
         animate="visible"
         className="container space-y-24 text-center"
       >
+        <Spotlight />
         <motion.div className="space-y-8">
           <motion.h1
             variants={item}

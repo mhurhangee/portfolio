@@ -31,11 +31,10 @@ export function PageLayout({
           leftSlot={<SidebarTrigger side="left" />}
           rightSlot={settings && <SidebarTrigger side="right" />}
         />
-        <main className="flex-1 overflow-auto p-6">
-        <SidebarInset>
+<div className="absolute inset-0 w-full h-full z-0 bg-grid-pattern z-0 bg-background" />
+        <main className="flex-1 overflow-auto p-6 z-10">
+          
           {children}
-        </SidebarInset>
-        
         </main>
       </div>
       {settings && <SettingsSidebar>{settings}</SettingsSidebar>}

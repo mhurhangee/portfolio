@@ -37,8 +37,8 @@ export default async function RootLayout({
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans min-h-screen bg-background text-foreground antialiased`}
       >
-        <div className="relative min-h-screen bg-gradient-to-b from-background to-background via-accent/10">
-          <div className="absolute inset-0 w-full h-full z-0  bg-grid-pattern" />
+        <div className="relative min-h-screen bg-background">
+          <div className="absolute inset-0 w-full h-full z-0 bg-grid-pattern" />
           <main className="relative">
             <Providers>
                 {children}

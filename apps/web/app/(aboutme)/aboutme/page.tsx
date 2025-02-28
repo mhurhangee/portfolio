@@ -8,6 +8,7 @@ import { MyStory } from "@/components/aboutme/mystory"
 import { Services } from "@/components/aboutme/services"
 import { Section } from "@/components/aboutme/section"
 import { SectionProvider } from "@/components/aboutme/sectioncontext"
+import { Spotlight } from "@workspace/ui/components/spotlight"
 
 export default function Home() {
     return (
@@ -15,6 +16,7 @@ export default function Home() {
         <div className="min-h-screen text-white">
           <NavBar />
           <div className="space-y-16">
+            <Spotlight />
             <Section id="hero">
               <Hero />
             </Section>

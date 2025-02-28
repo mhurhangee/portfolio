@@ -34,7 +34,7 @@ export default function DashboardPage() {
       description="View your dashboard analytics and manage your settings"
       settings={settings}
     >
-      <div className="space-y-8">
+      <div className="space-y-8 ">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
