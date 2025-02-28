@@ -26,7 +26,7 @@ export default function Home() {
             variants={item}
             className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tighter"
           >
-            Welcome to <span className="text-blue-500">Super</span><span className="text-green-500">fier</span>
+            Welcome to <span className="text-red-500">ai</span><span className="text-blue-500">con</span><span className="text-yellow-500">sult</span><span className="text-green-500">.uk</span>
           </motion.h1>
           
           <motion.h2 variants={item} 

@@ -14,8 +14,8 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Superfier: mastra.ai",
-  description: "Demo application showcasing Mastra.ai capabilities",
+  title: "aiconsult.uk: a portfolio by michael hurhangee",
+  description: "A portfolio by michael hurhangee",
   icons: {
     icon: [
       {
