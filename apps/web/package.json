@@ -13,6 +13,7 @@
     "@mastra/client-js": "^0.1.1",
     "@workspace/ui": "workspace:*",
     "@workspace/demo": "workspace:*",
+    "@workspace/blog": "workspace:*",
     "ai": "^4.1.45",
     "framer-motion": "^12.4.7",
     "lucide-react": "0.456.0",
