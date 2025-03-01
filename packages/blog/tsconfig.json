@@ -3,8 +3,11 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@workspace/ui/*": ["./src/*"]
-    }
+      "@/*": ["./src/*"],
+      "@workspace/blog": ["./src/index.ts"],
+      "@workspace/blog/*": ["./src/*"]
+    },
+    "types": ["node", "react", "react-dom", "next"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
