@@ -13,7 +13,7 @@ import { Spotlight } from "@workspace/ui/components/spotlight"
 export default function Home() {
     return (
       <SectionProvider>
-        <div className="min-h-screen text-white">
+        <div className="min-h-screen">
           <NavBar />
           <div className="space-y-16">
             <Spotlight />

@@ -49,7 +49,7 @@ export function ContactMe() {
 
       <motion.div className="flex flex-col items-center space-y-4 mb-8" variants={containerVariants}>
       <Image
-              src="/bilbo.jpg"
+              src="/mh.jpg"
               alt="Michael Hurhangee"
               width={100}
               height={100}

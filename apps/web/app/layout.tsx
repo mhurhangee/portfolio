@@ -14,7 +14,7 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "aiconsult.uk: a portfolio by michael hurhangee",
+  title: "aiconsult.uk: by michael hurhangee",
   description: "A portfolio by michael hurhangee",
   icons: {
     icon: [
