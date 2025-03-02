@@ -5,8 +5,8 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { FlipWords } from "@workspace/ui/components/flipwords"
 import { User2, Bot, BookText } from "lucide-react"
-import { container, item } from "../lib/animation"
-import { MainNav } from "../components/main-nav"
+import { container, item } from "@/lib/animation"
+import { MainNav } from "@/components/main-nav"
 
 export default function Home() {
   return (

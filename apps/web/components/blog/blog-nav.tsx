@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { Button } from '@workspace/ui/components/button'
-import { ChevronLeft, ChevronRight, ScrollText } from 'lucide-react'
-import type { PostMeta } from '../lib/types'
+import { ChevronLeft, ChevronRight, BookText } from 'lucide-react'
+import type { PostMeta } from '@/lib/blog/types'
 
 interface BlogNavProps {
   prevPost?: PostMeta
@@ -35,7 +35,7 @@ export function BlogNav({ prevPost, nextPost, position = 'bottom' }: BlogNavProp
 
       <Button variant="ghost" asChild className="flex-shrink-0">
         <Link href="/blog">
-          <ScrollText className="h-4 w-4" />
+          <BookText className="h-4 w-4" />
         </Link>
       </Button>
 

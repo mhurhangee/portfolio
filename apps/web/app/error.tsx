@@ -4,28 +4,7 @@ import { Button } from "@workspace/ui/components/button"
 import { motion } from "framer-motion"
 import { useEffect } from "react"
 import { AlertTriangle, RefreshCw } from "lucide-react"
-
-const container = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.3,
-    },
-  },
-}
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.7,
-      ease: "easeOut",
-    },
-  },
-}
+import { container, item } from "@/lib/animation"
 
 export default function Error({
   error,
