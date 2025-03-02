@@ -7,7 +7,6 @@ import { MyStory } from "@/components/aboutme/mystory"
 import { Services } from "@/components/aboutme/services"
 import { Section } from "@/components/aboutme/section"
 import { SectionProvider } from "@/components/aboutme/sectioncontext"
-import { Spotlight } from "@workspace/ui/components/spotlight"
 import { MainNav } from "@/components/main-nav"
 
 export default function Home() {
@@ -16,7 +15,6 @@ export default function Home() {
         <div className="min-h-screen">
           <MainNav />
           <div className="space-y-16">
-            <Spotlight />
             <Section id="hero">
               <Hero />
             </Section>

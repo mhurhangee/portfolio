@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@workspace/ui/components/button'
 import { ChevronLeft, ChevronRight, BookText } from 'lucide-react'
 import type { PostMeta } from '@/lib/blog/types'
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@workspace/ui/components/tooltip'
 
 interface BlogNavProps {
   prevPost?: PostMeta
@@ -33,11 +34,18 @@ export function BlogNav({ prevPost, nextPost, position = 'bottom' }: BlogNavProp
         )}
       </div>
 
-      <Button variant="ghost" asChild className="flex-shrink-0">
-        <Link href="/blog">
-          <BookText className="h-4 w-4" />
-        </Link>
-      </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" asChild className="flex-shrink-0">
+              <Link href="/blog">
+                <BookText className="h-4 w-4" />
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <span className="text-sm">All posts</span>
+          </TooltipContent>
+        </Tooltip>
 
       <div className="w-[40%] flex justify-end">
         {nextPost ? (

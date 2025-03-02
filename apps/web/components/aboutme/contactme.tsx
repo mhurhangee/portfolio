@@ -1,8 +1,10 @@
 import { useSection } from './sectioncontext'
 import { motion } from 'framer-motion'
-import { Mail, MapPin } from 'lucide-react'
+import { Mail, MapPin, Github, Linkedin, Calendar } from 'lucide-react'
 import { ScrollToTop } from './scroll-to-top'
 import Image from 'next/image'
+import Link from 'next/link'
+import { Button } from "@workspace/ui/components/button"
 
 export function ContactMe() {
 
@@ -47,23 +49,54 @@ export function ContactMe() {
         Contact me
       </motion.h2>
 
-      <motion.div className="flex flex-col items-center space-y-4 mb-8" variants={containerVariants}>
-      <Image
-              src="/mh.jpg"
-              alt="Michael Hurhangee"
-              width={100}
-              height={100}
-              className="rounded-full"
-            />
-        <motion.div className="flex items-center" variants={itemVariants}>
-          <Mail className="h-6 w-6 text-green-400 mr-2" />
-          <span className="text-lg text-foreground">michael@aiconsult.uk</span>
-        </motion.div>
-        <motion.div className="flex items-center" variants={itemVariants}>
-          <MapPin className="h-6 w-6 text-green-400 mr-2" />
-          <span className="text-lg text-foreground">Southampton, UK</span>
+      <motion.div className="flex flex-col items-center space-y-6 mb-8" variants={containerVariants}>
+        <Image
+          src="/mh.jpg"
+          alt="Michael Hurhangee"
+          width={100}
+          height={100}
+          className="rounded-full"
+        />
+        
+        <motion.div className="space-y-4" variants={itemVariants}>
+          <Link href="mailto:michael@aiconsult.uk">
+            <Button variant="ghost" className="flex items-center space-x-2 hover:bg-green-500/10 text-lg">
+              <Mail className="h-6 w-6 text-green-400" />
+              <span>michael@aiconsult.uk</span>
+            </Button>
+          </Link>
+          
+
+          
+          <Link href="https://github.com/mhurhangee" target="_blank" rel="noopener noreferrer">
+            <Button variant="ghost" className="flex items-center space-x-2 hover:bg-green-500/10 text-lg">
+              <Github className="h-6 w-6 text-green-400" />
+              <span>GitHub</span>
+            </Button>
+          </Link>
+          
+          <Link href="https://linkedin.com/in/mhurhangee" target="_blank" rel="noopener noreferrer">
+            <Button variant="ghost" className="flex items-center space-x-2 hover:bg-green-500/10 text-lg">
+              <Linkedin className="h-6 w-6 text-green-400" />
+              <span>LinkedIn</span>
+            </Button>
+          </Link>
+          
+          <Link href="https://calendar.app.google/3tqFGYuhNTHnHwxS6" target="_blank" rel="noopener noreferrer">
+            <Button variant="ghost" className="flex items-center space-x-2 hover:bg-green-500/10 text-lg">
+              <Calendar className="h-6 w-6 text-green-400" />
+              <span>Book a consultation</span>
+            </Button>
+          </Link>
+          <Link href="/" target="_blank" rel="noopener noreferrer">
+          <Button variant="ghost" className="flex items-center space-x-2 hover:bg-green-500/10 text-lg">
+            <MapPin className="h-6 w-6 text-green-400" />
+            <span>Southampton, UK</span>
+          </Button>
+          </Link>
         </motion.div>
       </motion.div>
+      
       <motion.div
         variants={itemVariants}
         className="mt-8"

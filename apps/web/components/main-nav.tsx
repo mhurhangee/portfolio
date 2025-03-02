@@ -23,28 +23,28 @@ import { useSection } from "./aboutme/sectioncontext"
 import { motion } from "framer-motion"
 
 const aboutSections = [
-  { 
-    name: "About", 
+  {
+    name: "About",
     section: "hero",
     activeClass: "bg-foreground text-background"
   },
-  { 
-    name: "Services", 
+  {
+    name: "Services",
     section: "services",
     activeClass: "bg-gradient-to-r from-red-500 to-red-600 text-foreground"
   },
-  { 
-    name: "Expertise", 
+  {
+    name: "Expertise",
     section: "expertise",
     activeClass: "bg-gradient-to-r from-blue-500 to-blue-600 text-foreground"
   },
-  { 
-    name: "Story", 
+  {
+    name: "Story",
     section: "story",
     activeClass: "bg-gradient-to-r from-yellow-300 to-yellow-400 text-foreground"
   },
-  { 
-    name: "Contact", 
+  {
+    name: "Contact",
     section: "contact",
     activeClass: "bg-gradient-to-r from-green-500 to-green-600 text-foreground"
   },
@@ -90,7 +90,7 @@ export function MainNav() {
   }
 
   return (
-    <motion.header 
+    <motion.header
       className="fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -116,27 +116,42 @@ export function MainNav() {
               ))}
             </div>
           )}
+          {isBlogPage && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" asChild className="flex-shrink-0 ml-4">
+                    <Link href="/blog">
+                      
+                      <BookText className="h-4 w-4" />
+                      Blog
+
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <span className="text-sm">All posts</span>
+                </TooltipContent>
+              </Tooltip>
+          )}
         </nav>
 
         <div className="flex items-center space-x-2 pr-2">
           <div className="hidden md:flex items-center space-x-2">
             {navItems.map((item) => (
-              <TooltipProvider key={item.href}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link href={item.href}>
-                      <Button variant="ghost" size="icon" className={cn(
-                        "w-9 h-9",
-                        isActive(item.href) && "bg-muted"
-                      )}>
-                        {item.icon}
-                        <span className="sr-only">{item.label}</span>
-                      </Button>
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>{item.label}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip key={item.label}>
+                <TooltipTrigger asChild>
+                  <Link href={item.href}>
+                    <Button variant="ghost" size="icon" className={cn(
+                      "w-9 h-9",
+                      isActive(item.href) && "bg-muted"
+                    )}>
+                      {item.icon}
+                      <span className="sr-only">{item.label}</span>
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>{item.label}</TooltipContent>
+              </Tooltip>
             ))}
           </div>
 
@@ -185,20 +200,19 @@ export function MainNav() {
                     ))}
                   </div>
                 )}
+
               </nav>
             </SheetContent>
           </Sheet>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <ModeToggle />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>Toggle theme</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <ModeToggle />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>Toggle theme</TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </motion.header>

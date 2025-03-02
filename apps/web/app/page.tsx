@@ -48,6 +48,13 @@ export default function Home() {
                 <span>AI Playground</span>
               </Button>
             </Link>
+            
+            <Link href="/blog" className="w-[200px] sm:w-auto">
+              <Button size="lg" variant="secondary" className="w-full text-base sm:text-lg px-4 sm:px-8 py-5 sm:py-6 space-x-2">
+                <BookText className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span>Blog</span>
+              </Button>
+            </Link>
           </motion.div>
 
           <motion.div
@@ -65,21 +72,6 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        <div className="fixed bottom-0 right-0 z-50 flex flex-col items-end">
-          <motion.div 
-            className="p-4"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 2 }}
-          >
-            <Link href="/blog">
-              <Button className="font-mono space-x-2" variant="outline">
-                <BookText className="h-4 w-4" />
-                <span>Blog</span>
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
       </div>
     </>
   )

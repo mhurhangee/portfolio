@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import type { Metadata } from "next"
 import "@workspace/ui/styles/globals.css"
 import { Providers } from "@/components/providers"
+import { Footer } from "@/components/footer"
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -43,6 +44,7 @@ export default async function RootLayout({
             <Providers>
                 {children}
             </Providers>
+            <Footer />
           </main>
         </div>
       </body>
