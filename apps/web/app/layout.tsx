@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import "@workspace/ui/styles/globals.css"
 import { Providers } from "@/components/providers"
 import { Footer } from "@/components/footer"
+import { MainNav } from "@/components/main-nav"
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -42,6 +43,7 @@ export default async function RootLayout({
           <div className="absolute inset-0 w-full h-full z-0 bg-grid-pattern" />
           <main className="relative">
             <Providers>
+            <MainNav />
                 {children}
             </Providers>
             <Footer />

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
+import { SectionProvider } from "@/components/aboutme/sectioncontext"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -14,7 +15,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableColorScheme
     >
       <TooltipProvider delayDuration={0}>
-        {children}
+        <SectionProvider>
+          {children}
+        </SectionProvider>
       </TooltipProvider>
     </NextThemesProvider>
   )

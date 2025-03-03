@@ -1,7 +1,7 @@
 import { BlogLayout } from '@/components/blog/blog-post-layout'
 import { calculateReadingTime } from '@/lib/blog/utils'
 import { MDXRemote } from 'next-mdx-remote/rsc'
-import { getPost, getPosts } from '../actions'
+import { getPost, getPosts } from '@/app/(blog)/blog/actions'
 import { Metadata } from 'next'
 
 export const dynamic = 'force-static'

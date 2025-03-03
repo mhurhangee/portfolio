@@ -11,9 +11,7 @@ import { MainNav } from "@/components/main-nav"
 
 export default function Home() {
     return (
-      <SectionProvider>
         <div className="min-h-screen">
-          <MainNav />
           <div className="space-y-16">
             <Section id="hero">
               <Hero />
@@ -32,6 +30,5 @@ export default function Home() {
             </Section>
           </div>
         </div>
-      </SectionProvider>
     )
 }

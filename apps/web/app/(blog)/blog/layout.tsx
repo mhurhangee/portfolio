@@ -10,7 +10,6 @@ export default function BlogLayout({
 }) {
   return (
     <div>
-      <MainNav />
       <div className="max-w-4xl mx-auto">
         {children}
       </div>
