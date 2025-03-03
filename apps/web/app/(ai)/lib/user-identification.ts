@@ -31,17 +31,18 @@ export async function getUserId(): Promise<string> {
 export function getUserIdClient(): string | null {
   if (typeof document === 'undefined') return null;
   
-  // Parse cookies from document.cookie
-  const cookies = document.cookie
-    .split(';')
-    .map(cookie => cookie.trim())
-    .reduce((acc, cookie) => {
-      const [key, value] = cookie.split('=');
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
+  // Get all cookies
+  const cookies = document.cookie.split('; ');
   
-  return cookies[USER_ID_COOKIE] || null;
+  // Find the user ID cookie
+  for (const cookie of cookies) {
+    const parts = cookie.split('=');
+    if (parts.length === 2 && parts[0] === USER_ID_COOKIE) {
+      return parts[1] || null;
+    }
+  }
+  
+  return null;
 }
 
 /**
@@ -57,13 +58,30 @@ export async function getUserInfo(req: NextRequest): Promise<{
   // Get user ID
   const userId = await getUserId();
   
-  // Get IP address from request
-  // Prioritize X-Forwarded-For header which is set by proxies
-  let ip = req.headers.get('x-forwarded-for') || req.ip || '';
+  // Get IP address from request using various headers
+  // NextRequest in Next.js doesn't expose direct IP or socket properties
+  let ip = req.headers.get('x-forwarded-for') || '';
   
-  // If multiple IPs in X-Forwarded-For, get the first one
+  // Try X-Real-IP as fallback
+  if (!ip) {
+    ip = req.headers.get('x-real-ip') || '';
+  }
+  
+  // Try CF-Connecting-IP (Cloudflare)
+  if (!ip) {
+    ip = req.headers.get('cf-connecting-ip') || '';
+  }
+  
+  // Default to localhost if we still have no IP
+  if (!ip) {
+    ip = '127.0.0.1';
+  }
+  
+  // If multiple IPs in X-Forwarded-For, get the first one (client IP)
   if (ip.includes(',')) {
-    ip = ip.split(',')[0].trim();
+    const firstIp = ip.split(',')[0];
+    // Ensure we have a string, not undefined
+    ip = typeof firstIp === 'string' ? firstIp.trim() : ip;
   }
   
   // Get user agent
