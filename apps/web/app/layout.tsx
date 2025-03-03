@@ -43,8 +43,8 @@ export default async function RootLayout({
           <div className="absolute inset-0 w-full h-full z-0 bg-grid-pattern" />
           <main className="relative">
             <Providers>
-            <MainNav />
-                {children}
+              <MainNav />
+              {children}
             </Providers>
             <Footer />
           </main>

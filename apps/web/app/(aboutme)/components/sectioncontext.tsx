@@ -6,7 +6,7 @@ type SectionContextType = {
   currentSection: string
 }
 
-const SectionContext = createContext<SectionContextType | undefined>(undefined)
+export const SectionContext = createContext<SectionContextType | undefined>(undefined)
 
 export function SectionProvider({ children }: { children: ReactNode }) {
   const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({})
