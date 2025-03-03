@@ -1,8 +1,10 @@
+// File: /home/mjh/front/apps/web/app/(ai)/components/tools/prompt-rewriter.tsx
+
 "use client"
 
 import { useState, useCallback } from "react"
-import { useCompletion } from "ai/react"
-import { Sparkles, Send, RotateCcw, Clipboard, CheckCircle } from "lucide-react"
+import { useCompletion } from "@ai-sdk/react"
+import { Send, RotateCcw, Clipboard, CheckCircle } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Textarea } from "@workspace/ui/components/textarea"
@@ -10,8 +12,10 @@ import { motion } from "framer-motion"
 import { PreflightError } from "@/app/(ai)/components/preflight-error"
 import { getErrorDisplay } from "@/app/(ai)/lib/preflight-checks/error-handler"
 import { container, item } from "@/lib/animation"
+import { APP_CONFIG } from "./config"
+import React from "react"
 
-export default function PromptRewriter() {
+export default function PromptRewriterTool() {
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<any>(null)
   
@@ -23,9 +27,8 @@ export default function PromptRewriter() {
     handleSubmit, 
     setCompletion, 
     setInput,
-    stop
   } = useCompletion({
-    api: '/api/ai/prompt-rewriter',
+    api: APP_CONFIG.apiRoute,
     onError: (error) => {
       console.error('Completion error:', error)
       // Handle API errors
@@ -80,9 +83,9 @@ export default function PromptRewriter() {
       className="space-y-8"
     >
       <motion.div variants={item} className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Prompt Rewriter</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{APP_CONFIG.name}</h1>
         <p className="text-muted-foreground">
-          Improve your prompts to get better results from AI systems.
+          {APP_CONFIG.description}
         </p>
       </motion.div>
       
@@ -90,7 +93,7 @@ export default function PromptRewriter() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Sparkles className="mr-2 h-5 w-5 text-primary" />
+              {APP_CONFIG.icon && React.cloneElement(APP_CONFIG.icon as React.ReactElement, { className: "mr-2 h-5 w-5 text-primary" })}
               Enhance Your Prompt
             </CardTitle>
             <CardDescription>
