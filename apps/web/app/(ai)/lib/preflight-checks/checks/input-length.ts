@@ -4,8 +4,8 @@ export const inputLengthCheck: PreflightCheck = {
   name: 'input_length',
   description: 'Checks if the input meets the length requirements',
   run: async ({ lastMessage }) => {
-    const minLength = 2;
-    const maxLength = 4000;
+    const minLength = 4;
+    const maxLength = 1000;
     
     if (!lastMessage || lastMessage.trim().length < minLength) {
       return {

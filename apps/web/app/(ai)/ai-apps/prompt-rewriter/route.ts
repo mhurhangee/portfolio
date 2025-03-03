@@ -3,22 +3,21 @@ import { runPreflightChecks } from '@/app/(ai)/lib/preflight-checks/preflight-ch
 import { handlePreflightError } from '@/app/(ai)/lib/preflight-checks/error-handler'
 import { NextRequest, NextResponse } from 'next/server'
 import { APP_CONFIG } from './config'
+import { getUserInfo } from '../../lib/user-identification';
 
 export const runtime = 'edge'
 export const maxDuration = 60
-
-// Config for the prompt rewriter
 
 
 export async function POST(req: NextRequest) {
   try {
     const { prompt } = await req.json()
     
-    // Get user ID from cookie or use a default
-    const userId = req.cookies.get('user_token')?.value || 'anonymous'
+    // Get user information from request including ID, IP, and user agent
+    const { userId, ip, userAgent } = await getUserInfo(req);
     
-    // Run preflight checks
-    const preflightResult = await runPreflightChecks(userId, prompt)
+    // Run preflight checks with full user context
+    const preflightResult = await runPreflightChecks(userId, prompt, ip, userAgent)
     
     // If preflight checks fail, return the error
     if (!preflightResult.passed && preflightResult.result) {
