@@ -2,15 +2,9 @@ import { PreflightCheck, CheckResult } from '../types';
 import OpenAI from 'openai';
 
 // Initialize OpenAI client
-const openai = new OpenAI();
-
-// Categories that we may check for in the moderation response
-const MODERATION_CATEGORIES = [
-  'sexual', 'sexual/minors', 'harassment', 'harassment/threatening',
-  'hate', 'hate/threatening', 'illicit', 'illicit/violent',
-  'self-harm', 'self-harm/intent', 'self-harm/instructions',
-  'violence', 'violence/graphic'
-];
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY! || 'dummy-key-for-build-time',
+});
 
 export const contentModerationCheck: PreflightCheck = {
   name: 'content_moderation',
