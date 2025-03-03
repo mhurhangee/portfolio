@@ -2,9 +2,7 @@ import { PreflightCheck, CheckResult } from '../types';
 import OpenAI from 'openai';
 
 // Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!
-});
+const openai = new OpenAI();
 
 // Categories that we may check for in the moderation response
 const MODERATION_CATEGORIES = [
