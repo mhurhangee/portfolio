@@ -3,7 +3,7 @@
 import { AlertCircle, AlertTriangle, Info, X } from "lucide-react"
 import { Alert, AlertTitle, AlertDescription } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
-import { ErrorDisplayConfig } from "@/lib/ai/preflight-checks/types"
+import { ErrorDisplayConfig } from "@/app/(ai)/lib/preflight-checks/types"
 
 interface PreflightErrorProps {
   config: ErrorDisplayConfig;

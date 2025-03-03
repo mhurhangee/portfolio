@@ -1,5 +1,5 @@
-import { BlogLayout } from '@/components/blog/blog-post-layout'
-import { calculateReadingTime } from '@/lib/blog/utils'
+import { BlogLayout } from '@/app/(blog)/components/blog-post-layout'
+import { calculateReadingTime } from '@/app/(blog)/lib/utils'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { getPost, getPosts } from '@/app/(blog)/blog/actions'
 import { Metadata } from 'next'

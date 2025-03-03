@@ -1,7 +1,7 @@
 'use server'
 
 import path from 'node:path'
-import { getAllPosts, getPostBySlug } from '@/lib/blog/server'
+import { getAllPosts, getPostBySlug } from '@/app/(blog)/lib/server'
 
 export async function getPosts() {
   const contentDir = path.join(process.cwd(), './content')

@@ -3,7 +3,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import matter from 'gray-matter'
-import type { Post, PostMeta } from '@/lib/blog/types'
+import type { Post, PostMeta } from '@/app/(blog)/lib/types'
 
 const defaultAuthor = {
   name: "Michael Hurhangee",

@@ -1,9 +1,9 @@
 import { streamText } from 'ai'
-import { runPreflightChecks } from '@/lib/ai/preflight-checks/preflight-checks'
-import { handlePreflightError } from '@/lib/ai/preflight-checks/error-handler'
+import { runPreflightChecks } from '@/app/(ai)/lib/preflight-checks/preflight-checks'
+import { handlePreflightError } from '@/app/(ai)/lib/preflight-checks/error-handler'
 import { NextRequest, NextResponse } from 'next/server'
 import { LLM_CONFIG } from './config'
-import { Message } from '@/lib/ai/preflight-checks/types'
+import { Message } from '@/app/(ai)/lib/preflight-checks/types'
 
 export const runtime = 'edge'
 export const maxDuration = 60

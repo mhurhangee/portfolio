@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Button } from '@workspace/ui/components/button'
 import { ChevronLeft, ChevronRight, BookText } from 'lucide-react'
-import type { PostMeta } from '@/lib/blog/types'
+import type { PostMeta } from '@/app/(blog)/lib/types'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@workspace/ui/components/tooltip'
 
 interface BlogNavProps {

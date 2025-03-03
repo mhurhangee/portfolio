@@ -9,7 +9,7 @@ import { Button } from "@workspace/ui/components/button"
 import { ScrollArea } from "@workspace/ui/components/scroll-area"
 import { Badge } from "@workspace/ui/components/badge"
 import { LayoutDashboard, Sparkles } from "lucide-react"
-import { aiCategories, getAppByHref } from "@/lib/ai/playground-config"
+import { aiCategories, getAppByHref } from "@/app/(ai)/lib/playground-config"
 import React from "react"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}

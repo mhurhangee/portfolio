@@ -7,8 +7,8 @@ import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { motion } from "framer-motion"
-import { PreflightError } from "@/components/ai/preflight-error"
-import { getErrorDisplay } from "@/lib/ai/preflight-checks/error-handler"
+import { PreflightError } from "@/app/(ai)/components/preflight-error"
+import { getErrorDisplay } from "@/app/(ai)/lib/preflight-checks/error-handler"
 import { container, item } from "@/lib/animation"
 
 export default function PromptRewriter() {

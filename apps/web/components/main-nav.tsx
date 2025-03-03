@@ -19,7 +19,7 @@ import {
 } from "@workspace/ui/components/sheet"
 import { Home, User2, BookText, Menu, Bot } from "lucide-react"
 import { ModeToggle } from "./mode-toggle"
-import { useSection } from "./aboutme/sectioncontext"
+import { useSection } from "../app/(aboutme)/components/sectioncontext"
 import { motion } from "framer-motion"
 
 const aboutSections = [

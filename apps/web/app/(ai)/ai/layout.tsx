@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@workspace/ui/lib/utils"
-import { Sidebar } from "@/components/ai/sidebar"
+import { Sidebar } from "@/app/(ai)/components/sidebar"
 
 export default function AILayout({
   children

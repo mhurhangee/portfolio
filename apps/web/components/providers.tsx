@@ -3,7 +3,7 @@
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
-import { SectionProvider } from "@/components/aboutme/sectioncontext"
+import { SectionProvider } from "@/app/(aboutme)/components/sectioncontext"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (

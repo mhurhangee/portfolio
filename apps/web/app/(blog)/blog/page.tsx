@@ -1,6 +1,6 @@
 import * as React from 'react'
-import { getPosts } from './actions'
-import { BlogPostList } from '@/components/blog/blog-post-list'
+import { getPosts } from '@/app/(blog)/blog/actions'
+import { BlogPostList } from '@/app/(blog)/components/blog-post-list'
 
 export const dynamic = 'force-static'
 
