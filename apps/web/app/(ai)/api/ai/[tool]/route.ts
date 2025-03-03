@@ -4,16 +4,8 @@ import { getToolBySlug } from '@/app/(ai)/lib/playground-config';
 export const runtime = 'edge';
 export const maxDuration = 60;
 
-// Define the parameter type with a Promise
-interface RouteParams {
-  params: {
-    tool: string;
-  };
-}
-
 export async function POST(
   req: NextRequest,
-  { params }: RouteParams
 ) {
   try {
     // Extract the tool parameter from the URL directly as a fallback approach
