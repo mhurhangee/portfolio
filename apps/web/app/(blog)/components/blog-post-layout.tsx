@@ -10,6 +10,7 @@ import { BlogNav } from '@/app/(blog)/components/blog-nav'
 import type { Post, PostMeta } from '@/app/(blog)/lib/types'
 import { motion } from 'framer-motion'
 import { container, item } from '@/lib/animation'
+import { TableOfContents } from './table-of-contents'
 
 interface BlogLayoutProps {
   post: Post
@@ -54,7 +55,7 @@ export function BlogLayout({ post, prevPost, nextPost, children }: BlogLayoutPro
               animate="visible"
             >
               <motion.h1 
-                className="text-3xl md:text-4xl font-bold"
+                className="text-3xl md:text-4xl font-bold text-foreground"
                 variants={item}
               >
                 {post.title}
@@ -72,17 +73,17 @@ export function BlogLayout({ post, prevPost, nextPost, children }: BlogLayoutPro
                     </Avatar>
                   </Link>
                   <div className="flex flex-col">
-                    <Link href={post.author.link} className="font-medium hover:underline">
+                    <Link href={post.author.link} className="font-medium text-foreground hover:underline">
                       {post.author.name}
                     </Link>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <CalendarIcon className="h-4 w-4" />
-                      <time dateTime={post.date}>{post.date}</time>
+                      <time dateTime={post.date} className="whitespace-nowrap">{post.date}</time>
                       {post.readTime && (
                         <>
                           <span>•</span>
                           <ClockIcon className="h-4 w-4" />
-                          <span>{post.readTime}</span>
+                          <span className="whitespace-nowrap">{post.readTime}</span>
                         </>
                       )}
                     </div>
@@ -102,7 +103,10 @@ export function BlogLayout({ post, prevPost, nextPost, children }: BlogLayoutPro
             </motion.header>
 
             <motion.article 
-              className="prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg max-w-none"
+              className="prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg max-w-none
+              prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary
+              prose-strong:text-foreground prose-li:text-foreground/90 prose-code:text-foreground
+              prose-headings:scroll-mt-20"
               variants={item}
             >
               {children}
@@ -111,9 +115,12 @@ export function BlogLayout({ post, prevPost, nextPost, children }: BlogLayoutPro
         </Card>
       </motion.div>
 
+
       <motion.div variants={item}>
         <BlogNav prevPost={prevPost} nextPost={nextPost} position="bottom" />
       </motion.div>
+      
+      <TableOfContents />
     </motion.div>
   )
 }

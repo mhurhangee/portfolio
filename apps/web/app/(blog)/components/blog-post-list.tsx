@@ -19,7 +19,7 @@ type Post = {
 export function BlogPostList({ posts }: { posts: Post[] }) {
   return (
     <motion.div 
-      className="container mx-auto px-4 pt-24"
+      className="container mx-auto px-4 pt-24 pb-12"
       variants={container}
       initial="hidden"
       animate="visible"

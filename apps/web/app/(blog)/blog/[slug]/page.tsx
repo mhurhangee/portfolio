@@ -3,6 +3,7 @@ import { calculateReadingTime } from '@/app/(blog)/lib/utils'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { getPost, getPosts } from '@/app/(blog)/blog/actions'
 import { Metadata } from 'next'
+import rehypePrettyCode from "rehype-pretty-code";
 
 export const dynamic = 'force-static'
 export const revalidate = false
@@ -73,7 +74,15 @@ export default async function BlogPostPage({
       prevPost={prevPost}
       nextPost={nextPost}
     >
-      <MDXRemote source={post.content} />
+      <MDXRemote source={post.content}
+        options={{
+          mdxOptions: {
+            rehypePlugins: [
+              [rehypePrettyCode, { theme: "github-dark-high-contrast" }]
+            ]
+          }
+        }}
+       />
     </BlogLayout>
   )
 }
