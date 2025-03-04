@@ -25,12 +25,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `aiconsult.uk - ${post.title}`,
     description: post.description,
     keywords: post.tags,
-    authors: [{ name: 'Michael Hurhangee' }],
+    authors: [{ name: "Michael Hurhangee" }],
     openGraph: {
       title: post.title,
       description: post.description,
       type: 'article',
-      authors: ['Michael Hurhangee'],
+      authors: ["Michael Hurhangee"],
       tags: post.tags,
     },
     twitter: {
