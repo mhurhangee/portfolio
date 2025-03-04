@@ -6,7 +6,9 @@ import { notFound } from "next/navigation"
 import dynamic from "next/dynamic"
 
 // Import the prompt rewriter component
-const PromptRewriterTool = dynamic(() => import("@/app/(ai)/ai-apps/prompt-rewriter/app"))
+const BasicPromptRewriterTool = dynamic(() => import("@/app/(ai)/ai-apps/basic-prompt-rewriter/app"))
+// Import the prompt tutor component
+const PromptTutorTool = dynamic(() => import("@/app/(ai)/ai-apps/prompt-tutor/app"))
 
 export default async function ToolPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -19,8 +21,11 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
 
   // Render the appropriate tool UI based on the tool type
   const renderToolUI = () => {
-    if (tool.id === 'prompt-rewriter') {
-      return <PromptRewriterTool />
+    if (tool.id === 'basic-prompt-rewriter') {
+      return <BasicPromptRewriterTool />
+    }
+    if (tool.id === 'prompt-tutor') {
+      return <PromptTutorTool />
     }
     
     // Default fallback

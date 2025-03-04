@@ -24,9 +24,7 @@ export const contentModerationCheck: PreflightCheck = {
           severity: 'info'
         };
       }
-      
-      console.log(`Content moderation: Checking message with ${textToModerate.length} characters`);
-      
+            
       // Call OpenAI moderation API
       const moderation = await openai.moderations.create({
         model: "text-moderation-latest", // Using text moderation as default
@@ -58,13 +56,6 @@ export const contentModerationCheck: PreflightCheck = {
         };
       }
       
-      // Log the moderation results for debugging
-      console.log('Content moderation results:', {
-        flagged: result.flagged,
-        categories: result.categories,
-        scores: result.category_scores
-      });
-      
       // If content is flagged for any reason
       if (result.flagged) {
         // Get categories that were flagged
@@ -86,8 +77,6 @@ export const contentModerationCheck: PreflightCheck = {
           severity: 'error'
         };
       }
-      
-      console.log('Content moderation: Content passed moderation check');
       
       // Content passed moderation
       return {

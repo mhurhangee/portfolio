@@ -15,15 +15,10 @@ export const aiContentAnalysisCheck: PreflightCheck = {
           severity: 'info'
         };
       }
-      
-      console.log(`AI content analysis: Analyzing message with ${lastMessage.length} characters`);
-      
+         
       // Use AI to analyze the message across multiple dimensions
       const analysis = await analyzeContent(lastMessage);
-      
-      // Log the full analysis for debugging
-      console.log('Content analysis results:', JSON.stringify(analysis, null, 2));
-      
+           
       // If the AI determines the content is not safe to process
       if (!analysis.overall.safeToProcess) {
         console.warn(`Content flagged as unsafe: ${analysis.overall.primaryReason}`);

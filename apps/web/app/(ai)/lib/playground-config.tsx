@@ -1,11 +1,13 @@
 // File: /home/mjh/front/apps/web/app/(ai)/lib/playground-config.tsx
 
 import { AITool, AICategory } from "@/app/(ai)/lib/types"
-import { APP_CONFIG as PromptRewriterConfig } from "../ai-apps/prompt-rewriter/config";
+import { APP_CONFIG as PromptRewriterConfig } from "../ai-apps/basic-prompt-rewriter/config";
+import { APP_CONFIG as PromptTutorConfig } from "../ai-apps/prompt-tutor/config";
 
 // Only define the prompt rewriter for now
 export const aiTools: AITool[] = [
-  PromptRewriterConfig
+  PromptRewriterConfig,
+  PromptTutorConfig
 ];
 
 // Organize applications by category

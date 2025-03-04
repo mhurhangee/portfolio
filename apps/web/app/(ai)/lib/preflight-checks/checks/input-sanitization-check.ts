@@ -14,8 +14,6 @@ export const inputSanitizationCheck: PreflightCheck = {
         };
       }
       
-      console.log(`Input sanitization: Checking message with ${lastMessage.length} characters`);
-      
       // Check for potentially malicious patterns
       const containsScript = /<script|javascript:|onerror=|onclick=|onload=/i.test(lastMessage);
       const containsSQLi = /(\s|;)(select|insert|update|delete|drop|alter|create)\s/i.test(lastMessage);
@@ -40,7 +38,6 @@ export const inputSanitizationCheck: PreflightCheck = {
         };
       }
       
-      console.log('Input sanitization: No dangerous patterns detected');
       return {
         passed: true,
         code: 'sanitization_passed',

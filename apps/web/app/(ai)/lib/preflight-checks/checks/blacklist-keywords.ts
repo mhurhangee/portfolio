@@ -100,8 +100,6 @@ export const blacklistedKeywordsCheck: PreflightCheck = {
         };
       }
       
-      console.log(`Blacklisted keywords check: Checking message with ${lastMessage.length} characters`);
-      
       // First check: Standard profanity check using bad-words
       if (filter.isProfane(lastMessage)) {
         const cleanVersion = filter.clean(lastMessage);
@@ -136,9 +134,6 @@ export const blacklistedKeywordsCheck: PreflightCheck = {
           severity: 'error'
         };
       }
-      
-      // All checks passed
-      console.log('Blacklisted keywords check: No prohibited content detected');
       
       return {
         passed: true,

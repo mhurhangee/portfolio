@@ -15,7 +15,7 @@ import { container, item } from "@/lib/animation"
 import { APP_CONFIG } from "./config"
 import React from "react"
 
-export default function PromptRewriterTool() {
+export default function BasicPromptRewriterTool() {
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<any>(null)
   

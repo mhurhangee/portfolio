@@ -7,7 +7,7 @@ import { blacklistedKeywordsCheck } from './checks/blacklist-keywords';
 import { aiContentAnalysisCheck } from './checks/ai-detection-check';
 import { languageCheck } from './checks/language-check';
 import { inputSanitizationCheck } from './checks/input-sanitization-check';
-import { enhancedRateLimitCheck } from './checks/enhanced-rate-limit-check';
+//import { enhancedRateLimitCheck } from './checks/enhanced-rate-limit-check';
 
 // Organize checks into tiers for better performance
 const tier1Checks: PreflightCheck[] = [
@@ -15,7 +15,7 @@ const tier1Checks: PreflightCheck[] = [
   inputSanitizationCheck, // Protect against script injection
   blacklistedKeywordsCheck, // Check for blacklisted terms
   languageCheck, // Only allow English content
-  enhancedRateLimitCheck, // IP-based protection
+  //enhancedRateLimitCheck, // IP-based protection
 ];
 
 const tier2Checks: PreflightCheck[] = [
@@ -41,7 +41,6 @@ async function runTierChecks(
   userAgent?: string
 ): Promise<PreflightResult | null> {
   for (const check of checks) {
-    console.log(`Running check: ${check.name}`);
     const result = await check.run({ userId, messages, lastMessage, ip, userAgent });
     
     if (!result.passed) {
@@ -113,8 +112,6 @@ export async function runPreflightChecks(
         }
       };
     }
-
-    console.log('Starting preflight checks');
 
     // Update these calls to pass ip and userAgent
     const tier1Result = await runTierChecks(userId, messages, lastMessage, tier1Checks, ip, userAgent);
