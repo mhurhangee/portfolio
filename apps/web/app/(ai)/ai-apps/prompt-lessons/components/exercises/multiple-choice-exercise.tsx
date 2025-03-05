@@ -1,73 +1,95 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@workspace/ui/components/button"
-import { TrueFalseExerciseSingle, ExerciseFeedback } from "../../schema"
-import { CheckCircle, XCircle, ToggleLeft } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group"
+import { Label } from "@workspace/ui/components/label"
+import { MultipleChoiceSingle, ExerciseFeedback } from "../../schema"
+import { CheckCircle, XCircle, ListChecks } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 
-interface TrueFalseExerciseProps {
-  exercise: TrueFalseExerciseSingle
-  onSubmit: (answer: boolean) => void
+interface MultipleChoiceExerciseProps {
+  exercise: MultipleChoiceSingle
+  onSubmit: (selectedIndex: number) => void
   feedback: ExerciseFeedback | null
   onReset: () => void
   questionNumber: number
 }
 
-export default function TrueFalseExerciseComponent({ 
+export default function MultipleChoiceExerciseComponent({ 
   exercise, 
   onSubmit, 
   feedback,
   onReset,
   questionNumber
-}: TrueFalseExerciseProps) {
+}: MultipleChoiceExerciseProps) {
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
   
-  // Auto-submit on button click
-  const handleAnswer = (value: boolean) => {
-    onSubmit(value);
+  // Auto-submit when an option is selected
+  const handleOptionSelect = (value: string) => {
+    const optionIndex = parseInt(value);
+    setSelectedOption(optionIndex);
+    onSubmit(optionIndex);
   };
   
   return (
     <div className="max-w-lg mx-auto">
-      {/* Statement section */}
+      {/* Question section */}
       <div className="border bg-white dark:bg-slate-900 rounded-lg shadow-sm p-4 mb-3">
         <div className="flex items-center gap-2 mb-2">
-          <ToggleLeft className="h-5 w-5 text-blue-500" />
-          <span className="font-medium text-sm">Question {questionNumber}: True or False</span>
+          <ListChecks className="h-5 w-5 text-indigo-500" />
+          <span className="font-medium text-sm">Question {questionNumber}: Multiple Choice</span>
         </div>
-        <p className="text-sm">{exercise.statement}</p>
+        <p className="text-sm">{exercise.question}</p>
       </div>
       
-      <div className="min-h-[100px]"> {/* Fixed height container prevents layout shift */}
+      {/* Fixed height container to prevent layout shift */}
+      <div className="min-h-[180px]">
         <AnimatePresence mode="wait">
           {!feedback ? (
-            <motion.div 
-              key="answer-buttons"
+            <motion.div
+              key="options"
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
               transition={{ duration: 0.2 }}
-              className="flex justify-center gap-3"
             >
-              <Button 
-                variant="outline"
-                size="sm"
-                className="w-24 font-medium border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-                onClick={() => handleAnswer(true)}
+              <RadioGroup 
+                value={selectedOption !== null ? selectedOption.toString() : undefined} 
+                onValueChange={handleOptionSelect}
+                className="space-y-2"
               >
-                True
-              </Button>
-              <Button 
-                variant="outline"
-                size="sm"
-                className="w-24 font-medium border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-                onClick={() => handleAnswer(false)}
-              >
-                False
-              </Button>
+                {exercise.options.map((option, index) => (
+                  <motion.div 
+                    key={`option-${questionNumber}-${index}`}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ 
+                      opacity: 1, 
+                      y: 0,
+                      transition: { delay: index * 0.05 } 
+                    }}
+                    className="border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden"
+                  >
+                    <div className="flex items-center p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <RadioGroupItem 
+                        value={index.toString()} 
+                        id={`option-${questionNumber}-${index}`} 
+                        className="ml-1 mr-3"
+                      />
+                      <Label 
+                        htmlFor={`option-${questionNumber}-${index}`} 
+                        className="flex-1 cursor-pointer text-sm"
+                      >
+                        {option}
+                      </Label>
+                    </div>
+                  </motion.div>
+                ))}
+              </RadioGroup>
             </motion.div>
           ) : (
             <motion.div
-              key="feedback-panel"
+              key="feedback"
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
@@ -112,5 +134,5 @@ export default function TrueFalseExerciseComponent({
         </AnimatePresence>
       </div>
     </div>
-  )
+  );
 }

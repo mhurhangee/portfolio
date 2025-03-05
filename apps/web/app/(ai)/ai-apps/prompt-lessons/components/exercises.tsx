@@ -1,27 +1,28 @@
-// File: /home/mjh/front/apps/web/app/(ai)/ai-apps/prompt-lessons/components/exercises.tsx
 "use client"
 
 import { useState } from "react"
 import { Button } from "@workspace/ui/components/button"
-import { Loader2, RefreshCw } from "lucide-react"
-import { Exercise, Lesson, LessonContent } from "../schema"
 import ExerciseWrapper from "./exercises/exercise-wrapper"
+import { Skeleton } from "@workspace/ui/components/skeleton"
+import { Loader2 } from "lucide-react" 
+import { motion, AnimatePresence } from "framer-motion"
 
 interface ExercisesProps {
-  lesson: Lesson
-  content: LessonContent
+  exercisePrompt: string;
+  topic: string;
 }
 
-export default function Exercises({ lesson, content }: ExercisesProps) {
-  const [exercises, setExercises] = useState<Exercise[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export default function Exercises({ exercisePrompt, topic }: ExercisesProps) {
+  const [exercises, setExercises] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const generateExercises = async () => {
+  // Generate exercises
+  const handleGenerateExercises = async () => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setIsLoading(true)
-      setError(null)
-      
       const response = await fetch('/api/ai/prompt-lessons', {
         method: 'POST',
         headers: {
@@ -29,138 +30,125 @@ export default function Exercises({ lesson, content }: ExercisesProps) {
         },
         body: JSON.stringify({
           action: 'generateExercises',
-          lessonId: lesson.id,
-          count: 3 // Request 3 exercises initially
+          exercisePrompt,
         }),
-      })
-
+      });
+      
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error?.message || 'Failed to generate exercises')
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Failed to generate exercises');
       }
-
-      const data = await response.json()
       
+      const data = await response.json();
+      
+      // Ensure we have exercises
       if (!data || !Array.isArray(data.exercises) || data.exercises.length === 0) {
-        throw new Error('No exercises were generated')
+        throw new Error('No exercises were generated');
       }
       
-      setExercises(data.exercises)
-    } catch (error: any) {
-      console.error("Error generating exercises:", error)
-      setError(error.message || "Failed to generate exercises")
+      setExercises(data.exercises);
+    } catch (err: any) {
+      console.error('Error generating exercises:', err);
+      setError(err.message || 'Failed to generate exercises');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
-
-  const generateMoreExercises = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      
-      const response = await fetch('/api/ai/prompt-lessons', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'generateExercises',
-          lessonId: lesson.id,
-          count: 2, // Request 2 additional exercises
-          existingExerciseIds: exercises.map(ex => ex.id) // To avoid duplicates
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error?.message || 'Failed to generate more exercises')
-      }
-
-      const data = await response.json()
-      
-      if (!data || !Array.isArray(data.exercises) || data.exercises.length === 0) {
-        throw new Error('No additional exercises were generated')
-      }
-      
-      setExercises([...exercises, ...data.exercises])
-    } catch (error: any) {
-      console.error("Error generating more exercises:", error)
-      setError(error.message || "Failed to generate more exercises")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
+  };
+  
   return (
-    <div className="space-y-8 mt-8">
-      <div className="border-t pt-6">
-        <h3 className="text-lg font-medium mb-4">Practice Exercises</h3>
+    <div className="space-y-6 mt-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Practice Exercises</h3>
         
-        {exercises.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-muted-foreground mb-4">
-              Ready to practice what you've learned? Generate interactive exercises to test your prompt engineering skills.
-            </p>
-            <Button 
-              onClick={generateExercises} 
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating Exercises...
-                </>
-              ) : (
-                "Generate Exercises"
-              )}
-            </Button>
-            
-            {error && (
-              <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded-md">
-                {error}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="space-y-6">
-              {exercises.map((exercise) => (
-                <ExerciseWrapper 
-                  key={exercise.id} 
-                  exercise={exercise} 
-                  lessonId={lesson.id} 
-                />
-              ))}
-            </div>
-            
-            <div className="text-center pt-4">
-              <Button 
-                variant="outline" 
-                onClick={generateMoreExercises} 
-                disabled={isLoading}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleGenerateExercises}
+          disabled={isLoading}
+          className="relative group transition-all border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Generating...
+            </>
+          ) : exercises.length === 0 ? (
+            <>Generate Exercises</>
+          ) : (
+            <>Try Different Exercises</>
+          )}
+          <span className="absolute -inset-0.5 -z-10 rounded-lg bg-gradient-to-b from-[#e9ecef] via-[#dee2e6] to-[#e9ecef] opacity-0 dark:from-[#0d1117] dark:via-[#161b22] dark:to-[#0d1117] group-hover:opacity-100 transition-opacity"></span>
+        </Button>
+      </div>
+      
+      {error && (
+        <div className="p-3 text-sm border border-red-200 bg-red-50 text-red-700 rounded-md dark:bg-red-950/30 dark:border-red-900 dark:text-red-400">
+          {error}
+        </div>
+      )}
+      
+      <AnimatePresence mode="wait">
+        {isLoading ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-4"
+          >
+            <ExerciseSkeleton />
+            <ExerciseSkeleton />
+          </motion.div>
+        ) : exercises.length > 0 ? (
+          <motion.div
+            key="exercises"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-8"
+          >
+            {exercises.map((exercise, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { delay: index * 0.1 }
+                }}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating More...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Generate More Exercises
-                  </>
-                )}
-              </Button>
-            </div>
-            
-            {error && (
-              <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded-md">
-                {error}
-              </div>
-            )}
-          </div>
+                <ExerciseWrapper 
+                  exercise={exercise} 
+                  questionNumber={index + 1}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="py-8 text-center"
+          >
+            <p className="text-sm text-muted-foreground">
+              Generate exercises to test your understanding of <span className="font-medium text-foreground">{topic}</span>.
+            </p>
+          </motion.div>
         )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function ExerciseSkeleton() {
+  return (
+    <div className="space-y-2">
+      <Skeleton className="h-32 w-full rounded-md" />
+      <div className="flex justify-center space-x-2">
+        <Skeleton className="h-8 w-24 rounded-md" />
+        <Skeleton className="h-8 w-24 rounded-md" />
       </div>
     </div>
   )

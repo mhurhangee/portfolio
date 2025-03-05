@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     //const { userId, ip, userAgent } = await getUserInfo(req);
     
     // Handle different request types
-    const { action, lessonId, exerciseId, userAnswer, count = 3, existingExerciseIds = [] } = requestData;
+    const { action, lessonId, exerciseId, userAnswer, count = 3, existingExerciseIds = [], exercisePrompt } = requestData;
     
     if (!action) {
       return Response.json(
@@ -105,19 +105,25 @@ export async function POST(req: NextRequest) {
         );
       }
     }
-    else if  (action === 'generateExercises') {
-      
+    else if (action === 'generateExercises') {
       // Input validation
-      if (!lessonId) {
+      if (!exercisePrompt) {
         return Response.json(
-          { error: { code: 'invalid_request', message: 'Lesson ID is required', severity: 'error' } },
+          { error: { code: 'invalid_request', message: 'Exercise prompt is required', severity: 'error' } },
           { status: 400 }
         );
       }
       
       try {
-        const exercises = await generateExercisesForLesson(lessonId, count, existingExerciseIds);
-        return Response.json({ exercises });
+        const exercisesData = await generateExercisesForLesson(exercisePrompt);
+        console.log("Generated exercises:", JSON.stringify(exercisesData));
+        
+        // Make sure we have exercises before returning
+        if (!exercisesData || !exercisesData.exercises || exercisesData.exercises.length === 0) {
+          throw new Error("No exercises were generated");
+        }
+        
+        return Response.json(exercisesData);
       } catch (error: any) {
         console.error('Error generating exercises:', error);
         return Response.json(

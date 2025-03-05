@@ -1,22 +1,12 @@
 // File: /home/mjh/front/apps/web/app/(ai)/ai-apps/prompt-lessons/lessons/lesson-data.ts
 
-import { Lesson, LessonContent } from '../schema';
-import { whatIsAILesson, whatIsAIContent } from './what-is-ai';
-import { whatIsPromptLesson, whatIsPromptContent } from './what-is-prompt';
+import { Lesson } from '../schema';;
 import { promptComponentsLesson } from './prompt-components';
 
 // Collect all lessons
 export const lessons: Lesson[] = [
-  whatIsAILesson,
-  whatIsPromptLesson,
   promptComponentsLesson
 ];
-
-// Map of static lesson content
-export const staticLessonContent: Record<string, LessonContent> = {
-  'what-is-ai': whatIsAIContent,
-  'what-is-prompt': whatIsPromptContent
-};
 
 // Helper function to get all lessons
 export function getAllLessons(): Lesson[] {
@@ -36,9 +26,4 @@ export function getLessonsByCategory(category: string): Lesson[] {
 // Helper function to get lessons by difficulty
 export function getLessonsByDifficulty(difficulty: string): Lesson[] {
   return lessons.filter(lesson => lesson.difficulty === difficulty);
-}
-
-// Helper function to get static lesson content (if available)
-export function getStaticLessonContent(lessonId: string): LessonContent | undefined {
-  return staticLessonContent[lessonId];
 }

@@ -1,66 +1,48 @@
-// File: /home/mjh/front/apps/web/app/(ai)/ai-apps/prompt-lessons/schema.ts
-
 import { z } from 'zod';
 
-// Define the lesson data structure
+export const allDifficulties = ['Beginner', 'Intermediate', 'Advanced'] as const
+export const allCategories = ['Fundamentals', 'Clarity', 'Specificity', 'Structure', 'Context'] as const
+
+export const difficultySchema = z.enum(allDifficulties);
+export const categorySchema = z.enum(allCategories);
+
+export type Difficulty = z.infer<typeof difficultySchema>;
+export type Category = z.infer<typeof categorySchema>;
+
 export const lessonSchema = z.object({
   id: z.string().describe('Unique identifier for the lesson'),
   title: z.string().describe('Display title of the lesson'),
+  topic: z.string().describe('Topic covered by the lesson'),
   description: z.string().describe('Brief description of what the lesson covers'),
-  difficulty: z.enum(['beginner', 'intermediate', 'advanced'])
-    .describe('Difficulty level of the lesson'),
-  category: z.enum(['fundamentals', 'clarity', 'specificity', 'structure', 'context'])
-    .describe('Category that the lesson belongs to'),
-  estimatedTime: z.string()
-    .describe('Estimated time to complete the lesson (e.g., "10 min")'),
-  contentType: z.enum(['static', 'ai-generated'])
-    .describe('Whether the lesson content is static or AI-generated'),
-  generationPrompt: z.string().optional()
-    .describe('Custom prompt to use when generating this lesson with AI'),
+  difficulty: difficultySchema.describe('Difficulty level of the lesson'),
+  category: categorySchema.describe('Category that the lesson belongs to')
 });
 
 export type Lesson = z.infer<typeof lessonSchema>;
 
-export const exerciseSchema = z.object({
-  id: z.string().describe('Unique identifier for the exercise').optional().default(() => `exercise-${Date.now()}-${Math.floor(Math.random() * 1000)}`),
-  type: z.enum(['true-false', 'improve', 'construct', 'multiple-choice', 'fill-blank'])
-    .describe('Type of exercise'),
-  title: z.string().describe('Title of the exercise'),
-  instructions: z.string().describe('Instructions for completing the exercise'),
-  prompt: z.string().optional()
-    .describe('Prompt text for "improve" exercises'),
-  statement: z.string().optional()
-    .describe('Statement for "true-false" exercises'),
-  isTrue: z.boolean().optional().default(true)
-    .describe('The correct answer for true-false exercises'),
-  options: z.array(z.string()).optional()
-    .describe('Options for "multiple-choice" exercises'),
-  correctAnswer: z.union([z.string(), z.array(z.string())]).optional()
-    .describe('Correct answer(s) for the exercise'),
-  hints: z.array(z.string()).optional().default([])
-    .describe('Optional hints for the user'),
-});
-
-export type Exercise = z.infer<typeof exerciseSchema>;
-
-// Define the exercise types with improved default handling
-export const exercisesSchema = z.object({
-  exercises: z.array(exerciseSchema).default([]),
-});
-
-export type Exercises = z.infer<typeof exercisesSchema>;
-
 // Define the lesson content structure
 export const lessonContentSchema = z.object({
-  introduction: z.string()
-    .describe('Introduction text for the lesson'),
-  examples: z.array(z.object({
-    good: z.string().describe('Example of a good prompt based on the lesson topic'),
-    bad: z.string().describe('Example of a bad prompt based on the lesson topic'),
-    explanation: z.string().describe('Explanation of why the good prompt is better based on the lesson topic'),
-  })).describe('Examples of good vs bad prompts'),
+  whyLearn: z.string()
+    .describe('Explanation of why this topic is important to learn'),
+  whatIs: z.string()
+    .describe('Clear definition and explanation of the topic'),
+  keyPrinciples: z.array(z.object({
+    title: z.string()
+      .describe('Name of the principle'),
+    description: z.string()
+      .describe('Explanation of the principle'),
+    examples: z.array(z.object({
+      good: z.string().describe('Example demonstrating good use of this principle'),
+      bad: z.string().describe('Example demonstrating poor use of this principle'),
+      explanation: z.string().describe('Explanation of why the good example follows this principle better'),
+    })).min(1).describe('Examples showing the principle in action'),
+  })).min(1).describe('Key principles or components of the topic'),
+  applications: z.array(z.object({
+    scenario: z.string()
+      .describe('Description of a real-world scenario where this topic may be useful in the workplace'),
+  })).min(1).describe('List of practical applications and real word scenarios where this topic may be useful in the workplace focusing'),
   conclusion: z.string()
-    .describe('Concluding text for the lesson'),
+    .describe('Summary of key takeaways and importance of the topic'),
 });
 
 export type LessonContent = z.infer<typeof lessonContentSchema>;
@@ -73,19 +55,55 @@ export const lessonResponseSchema = z.object({
 
 export type LessonResponse = z.infer<typeof lessonResponseSchema>;
 
-// Schema for exercise feedback response
 export const exerciseFeedbackSchema = z.object({
   isCorrect: z.boolean()
     .describe('Whether the user\'s answer is correct'),
   feedback: z.string()
-    .describe('Short feedback message on the user\'s answer'),
-  explanation: z.string()
+    .describe('Feedback message on the user\'s answer'),
+  explanation: z.string().optional()  // Make explanation optional
     .describe('Detailed explanation of the feedback'),
+  correctAnswer: z.union([z.string(), z.array(z.string())]).optional()
+    .describe('Correct answer(s) for the exercise'),
   suggestedImprovement: z.string().optional()
     .describe('Suggested improvement for "improve" exercises'),
 });
 
 export type ExerciseFeedback = z.infer<typeof exerciseFeedbackSchema>;
+
+export const multipleChoiceSingle = z.object({
+  type: z.literal('multiple-choice'),
+  question: z.string(),
+  options: z.array(z.string()).min(4).max(4),
+  explanation: z.string().describe('Short explanation of the correct answer'),
+  correctOptionIndex: z.number().int().min(0)
+});
+
+export type MultipleChoiceSingle = z.infer<typeof multipleChoiceSingle>;
+
+export const trueFalseExerciseSingle= z.object({
+  type: z.literal('true-false'),
+  statement: z.string(),
+  explanation: z.string().describe('Short explanation of the correct answer'),
+  isTrue: z.boolean()
+});
+
+export type TrueFalseExerciseSingle = z.infer<typeof trueFalseExerciseSingle>;
+
+export const trueFalseExerciseGroup = z.object({
+  exercises: z.array(trueFalseExerciseSingle).min(1).max(2)
+})
+
+export interface TrueFalseExerciseGroup {
+  exercises: Array<TrueFalseExerciseSingle>;
+}
+
+export const multipleChoiceExerciseGroup = z.object({
+  exercises: z.array(multipleChoiceSingle).min(1).max(2)
+})
+
+export interface MultipleChoiceExerciseGroup {
+  exercises: Array<MultipleChoiceSingle>;
+}
 
 // Interface for API error response
 export interface ApiError {

@@ -2,16 +2,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { BookOpen, GraduationCap, RotateCcw } from "lucide-react"
+import { RotateCcw } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
+import { Card, CardContent, CardFooter } from "@workspace/ui/components/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 import { motion } from "framer-motion"
 import { PreflightError } from "@/app/(ai)/components/preflight-error"
 import { getErrorDisplay } from "@/app/(ai)/lib/preflight-checks/error-handler"
 import { container, item } from "@/lib/animation"
 import { APP_CONFIG } from "./config"
-import { lessons, getAllLessons, getLessonById, getStaticLessonContent } from "./lessons/lesson-data"
+import { lessons, getAllLessons } from "./lessons/lesson-data"
 import { Lesson, LessonContent } from "./schema"
 import LessonBrowser from "./components/lesson-browser"
 import LessonContentView from "./components/lesson-content"
@@ -23,7 +23,6 @@ export default function PromptLessonsTool() {
     const [error, setError] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [currentLessons, setCurrentLessons] = useState<Lesson[]>([])
-    const [activeFilter, setActiveFilter] = useState<string>("all")
 
     // Initialize lessons
     useEffect(() => {
@@ -45,71 +44,49 @@ export default function PromptLessonsTool() {
             if (!lesson?.id) {
                 throw new Error("Invalid lesson ID");
             }
-            
-            // Check if this is a static lesson with predefined content
-            if (lesson.contentType === 'static') {
-                setTimeout(() => {
-                    setIsLoading(false)
-                    const staticContent = getStaticLessonContent(lesson.id);
-                    
-                    // If static content exists, use it
-                    if (staticContent) {
-                        setLessonContent(staticContent);
-                        return;
-                    }
-                    
-                    // If static content wasn't found, show error
-                    setError({
-                        code: 'content_error',
-                        message: `Static content for lesson '${lesson.id}' not found`,
-                        severity: 'error'
-                    });
-                }, 800);
-            } else if (lesson.contentType === 'ai-generated') {
-                // This is an AI-generated lesson - make an API call
-                try {
-                    const response = await fetch('/api/ai/prompt-lessons', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: 'getLesson',
-                            lessonId: lesson.id
-                        }),
-                    });
-                    
-                    if (!response.ok) {
-                        console.log(response)
-                        const errorData = await response.json();
-                        throw new Error(errorData.error?.message || `Failed to fetch lesson content (${response.status})`);
-                    }
-                    
-                    const data = await response.json();
-                    console.log("API response:", data);
-                    
-                    // Check if the API returned an error
-                    if (data.error) {
-                        throw new Error(data.error.message || 'An unknown error occurred');
-                    }
-                    
-                    // Ensure content exists in the response
-                    if (!data.content) {
-                        throw new Error('API response missing lesson content');
-                    }
-                    
-                    setLessonContent(data.content);
-                    setIsLoading(false);
-                    
-                } catch (apiError: any) {
-                    console.error("API error:", apiError);
-                    setError({
-                        code: 'api_error',
-                        message: apiError.message || 'Failed to generate lesson content',
-                        severity: 'error'
-                    });
-                    setIsLoading(false);
+
+            try {
+                const response = await fetch('/api/ai/prompt-lessons', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'getLesson',
+                        lessonId: lesson.id
+                    }),
+                });
+
+                if (!response.ok) {
+                    console.log(response)
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || `Failed to fetch lesson content (${response.status})`);
                 }
+
+                const data = await response.json();
+                console.log("API response:", data);
+
+                // Check if the API returned an error
+                if (data.error) {
+                    throw new Error(data.error.message || 'An unknown error occurred');
+                }
+
+                // Ensure content exists in the response
+                if (!data.content) {
+                    throw new Error('API response missing lesson content');
+                }
+
+                setLessonContent(data.content);
+                setIsLoading(false);
+
+            } catch (apiError: any) {
+                console.error("API error:", apiError);
+                setError({
+                    code: 'api_error',
+                    message: apiError.message || 'Failed to generate lesson content',
+                    severity: 'error'
+                });
+                setIsLoading(false);
             }
 
         } catch (err: any) {
@@ -120,19 +97,6 @@ export default function PromptLessonsTool() {
                 severity: 'error'
             })
             setIsLoading(false)
-        }
-    }
-
-    // Function to filter lessons
-    const filterLessons = (filterType: string, value: string) => {
-        setActiveFilter(`${filterType}-${value}`)
-
-        if (filterType === 'difficulty') {
-            setCurrentLessons(lessons.filter(lesson => lesson.difficulty === value))
-        } else if (filterType === 'category') {
-            setCurrentLessons(lessons.filter(lesson => lesson.category === value))
-        } else {
-            setCurrentLessons(getAllLessons())
         }
     }
 
@@ -167,17 +131,7 @@ export default function PromptLessonsTool() {
 
             <motion.div variants={item}>
                 <Card className="overflow-hidden">
-                    <CardHeader>
-                        <CardTitle className="flex items-center">
-                            <GraduationCap className="mr-2 h-5 w-5 text-primary" />
-                            Learn Prompt Engineering
-                        </CardTitle>
-                        <CardDescription>
-                            Interactive lessons to help you master the art of crafting effective prompts.
-                        </CardDescription>
-                    </CardHeader>
-
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
                         <div className="px-6">
                             <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="browse" onClick={handleBack}>Browse Lessons</TabsTrigger>
@@ -190,9 +144,8 @@ export default function PromptLessonsTool() {
                                 {errorConfig && <PreflightError config={errorConfig} />}
 
                                 <LessonBrowser
-                                    lessons={currentLessons}
-                                    activeFilter={activeFilter}
-                                    onFilterChange={filterLessons}
+                                    lessons={lessons}
+                                    selectedLesson={selectedLesson}
                                     onSelectLesson={handleSelectLesson}
                                 />
                             </CardContent>
@@ -210,20 +163,20 @@ export default function PromptLessonsTool() {
                                     />
                                 )}
                             </CardContent>
+
+                            <div className="flex items-center justify-center mt-4 mb-6">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleBack}
+                                    disabled={activeTab === 'browse'}
+                                >
+                                    <RotateCcw className="mr-2 h-4 w-4" />
+                                    Back to Lessons
+                                </Button>
+                            </div>
                         </TabsContent>
                     </Tabs>
-
-                    <CardFooter className="flex justify-between p-6 border-t">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleBack}
-                            disabled={activeTab === 'browse'}
-                        >
-                            <RotateCcw className="mr-2 h-4 w-4" />
-                            Back to Lessons
-                        </Button>
-                    </CardFooter>
                 </Card>
             </motion.div>
         </motion.div>
