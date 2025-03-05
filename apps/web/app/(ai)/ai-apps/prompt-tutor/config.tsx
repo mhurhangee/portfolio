@@ -8,7 +8,7 @@ export const APP_CONFIG: AITool = {
     id: "prompt-tutor",
     name: "Prompt Tutor",
     href: "/ai/prompt-tutor",
-    description: "Learn how to craft effective AI prompts through interactive lessons",
+    description: "Learn how to craft effective AI prompts",
     icon: <BookOpen className="h-6 w-6" />,
     systemPrompt: `You are an expert prompt engineering tutor who helps users learn how to write more effective prompts for AI systems.
 
@@ -22,7 +22,7 @@ When analyzing user prompts:
 5. Reference prompt engineering principles and best practices`,
     model: groq('llama-3.1-8b-instant'),
     apiRoute: '/api/ai/prompt-tutor',
-    category: 'tools',
+    category: 'prompt',
     color: "from-purple-500 to-indigo-400",
     isNew: true,
     temperature: 0.2,

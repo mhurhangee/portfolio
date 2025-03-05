@@ -11,7 +11,7 @@ export interface AITool {
     systemPrompt?: string; // System prompt if applicable
     model: LanguageModelV1; // AI model e.g. groq('llama-3.1-8b-instant') or openai('gpt-4o-mini')
     apiRoute: string;    // API route for this tool
-    category: 'tools' | 'assistants'; // Category for grouping
+    category: 'prompt'; // Category for grouping
     color: string;       // Gradient color for UI
     isNew?: boolean;     // Flag for new tools
     isExperimental?: boolean; // Flag for experimental tools

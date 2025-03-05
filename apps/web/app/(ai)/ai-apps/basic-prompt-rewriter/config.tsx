@@ -23,7 +23,7 @@ YOU MUST ALWAYS RETURN A WRITTEN PROMPT.
 Return only the rewritten prompt without explanation, commentary, or surrounding text.`,
     model: groq('llama-3.1-8b-instant'),
     apiRoute: '/api/ai/basic-prompt-rewriter',
-    category: 'tools',
+    category: 'prompt',
     color: "from-blue-500 to-cyan-400",
     isNew: false,
     temperature: 0.3,

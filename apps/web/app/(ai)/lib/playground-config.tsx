@@ -13,14 +13,9 @@ export const aiTools: AITool[] = [
 // Organize applications by category
 export const aiCategories: AICategory[] = [
   {
-    name: "Tools",
-    description: "Utilities to enhance your AI workflow",
-    apps: aiTools.filter(app => app.category === 'tools')
-  },
-  {
-    name: "Assistants",
-    description: "Specialized AI helpers for specific tasks",
-    apps: aiTools.filter(app => app.category === 'assistants')
+    name: "Prompt Helpers" ,
+    description: "Utilities to help you craft more effective AI prompts",
+    apps: aiTools.filter(app => app.category === 'prompt')
   }
 ];
 
