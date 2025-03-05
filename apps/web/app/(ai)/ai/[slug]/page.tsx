@@ -5,10 +5,9 @@ import { getToolBySlug } from "@/app/(ai)/lib/playground-config"
 import { notFound } from "next/navigation"
 import dynamic from "next/dynamic"
 
-// Import the prompt rewriter component
 const BasicPromptRewriterTool = dynamic(() => import("@/app/(ai)/ai-apps/basic-prompt-rewriter/app"))
-// Import the prompt tutor component
 const PromptTutorTool = dynamic(() => import("@/app/(ai)/ai-apps/prompt-tutor/app"))
+const PromptLessonsTool = dynamic(() => import("@/app/(ai)/ai-apps/prompt-lessons/app"))
 
 export default async function ToolPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -26,6 +25,9 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
     }
     if (tool.id === 'prompt-tutor') {
       return <PromptTutorTool />
+    }
+    if (tool.id === 'prompt-lessons') {
+      return <PromptLessonsTool />
     }
     
     // Default fallback
