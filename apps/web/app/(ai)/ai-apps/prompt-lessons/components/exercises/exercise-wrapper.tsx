@@ -2,19 +2,22 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import {
   ExerciseFeedback,
-  TrueFalseExerciseSingle,
   MultipleChoiceSingle,
+  MultipleChoiceExerciseGroup,
+  TrueFalseExerciseSingle,
   TrueFalseExerciseGroup,
-  MultipleChoiceExerciseGroup
+  FillInBlankSingle,
+  FillInBlankExerciseGroup
 } from "../../schema"
 import TrueFalseExerciseComponent from "./true-false-exercise"
 import MultipleChoiceExerciseComponent from "./multiple-choice-exercise"
+import FillInBlankExerciseComponent from "./fill-blank-exercise"
 
 export interface ExerciseWrapperProps {
-  exercise: TrueFalseExerciseSingle | MultipleChoiceSingle | TrueFalseExerciseGroup | MultipleChoiceExerciseGroup;
+  exercise: TrueFalseExerciseSingle | MultipleChoiceSingle | FillInBlankSingle |
+  TrueFalseExerciseGroup | MultipleChoiceExerciseGroup | FillInBlankExerciseGroup;
   questionNumber: number;
 }
 
@@ -50,6 +53,21 @@ export default function ExerciseWrapper({ exercise, questionNumber }: ExerciseWr
     });
   };
 
+  // Add this function to handle fill-in-blank submissions
+  const handleFillInBlankSubmit = (answer: string) => {
+    const typedExercise = exerciseItem as FillInBlankSingle;
+
+    // Simple exact match check
+    const isCorrect = answer.toLowerCase() === typedExercise.correctAnswer.toLowerCase();
+
+    setFeedback({
+      isCorrect,
+      feedback: isCorrect ?
+        "Correct! You filled in the blank correctly." :
+        "Incorrect. Try looking at the explanation to understand the right answer."
+    });
+  };
+
   // Reset feedback to allow retrying
   const resetFeedback = () => {
     setFeedback(null);
@@ -71,6 +89,16 @@ export default function ExerciseWrapper({ exercise, questionNumber }: ExerciseWr
         <MultipleChoiceExerciseComponent
           exercise={exerciseItem as MultipleChoiceSingle}
           onSubmit={handleMultipleChoiceSubmit}
+          feedback={feedback}
+          onReset={resetFeedback}
+          questionNumber={questionNumber}
+        />
+      )}
+
+      {exerciseItem?.type === 'fill-in-blank' && (
+        <FillInBlankExerciseComponent
+          exercise={exerciseItem as FillInBlankSingle}
+          onSubmit={handleFillInBlankSubmit}
           feedback={feedback}
           onReset={resetFeedback}
           questionNumber={questionNumber}

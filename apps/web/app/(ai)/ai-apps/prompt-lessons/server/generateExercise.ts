@@ -1,6 +1,7 @@
 // For generateExercise.ts
 import { generateMultipleChoiceExercises } from './generateMultipleChoice';
 import { generateTrueFalseExercises } from './generateTrueFalse';
+import { generateFillInBlankExercises } from './generateFillBlank';
 
 // Function to generate exercises focusing on true/false and multiple-choice
 export const generateExercisesForLesson = async (
@@ -11,21 +12,14 @@ export const generateExercisesForLesson = async (
   }
 
   try {
-    // Generate true/false exercises
     const trueFalseExercises = await generateTrueFalseExercises(exercisePrompt);
-    
-    // Generate multiple-choice exercises
     const multipleChoiceExercises = await generateMultipleChoiceExercises(exercisePrompt);
-    
-    // Debug logging
-    console.log(`Generated ${trueFalseExercises.length} true/false exercises`);
-    console.log(`Generated ${multipleChoiceExercises.length} multiple-choice exercises`);
+    const fillInBlankExercises = await generateFillInBlankExercises(exercisePrompt);
     
     // Check if we have any exercises before returning
-    const allExercises = [...trueFalseExercises, ...multipleChoiceExercises];
+    const allExercises = [...trueFalseExercises, ...multipleChoiceExercises, ...fillInBlankExercises];
     
     if (allExercises.length === 0) {
-      console.error("No exercises were generated after trying both types");
       throw new Error("Failed to generate exercises");
     }
     
@@ -34,7 +28,6 @@ export const generateExercisesForLesson = async (
       exercises: allExercises
     };
   } catch (error: any) {
-    console.error("Error generating exercises:", error);
     throw new Error(`Failed to generate exercises: ${error.message}`);
   }
 };

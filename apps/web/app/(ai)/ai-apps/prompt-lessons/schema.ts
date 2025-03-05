@@ -78,7 +78,12 @@ export const multipleChoiceSingle = z.object({
   correctOptionIndex: z.number().int().min(0)
 });
 
+export const multipleChoiceExerciseGroup = z.object({
+  exercises: z.array(multipleChoiceSingle).min(1).max(2)
+})
+
 export type MultipleChoiceSingle = z.infer<typeof multipleChoiceSingle>;
+export type MultipleChoiceExerciseGroup = z.infer<typeof multipleChoiceExerciseGroup>;
 
 export const trueFalseExerciseSingle= z.object({
   type: z.literal('true-false'),
@@ -87,23 +92,29 @@ export const trueFalseExerciseSingle= z.object({
   isTrue: z.boolean()
 });
 
-export type TrueFalseExerciseSingle = z.infer<typeof trueFalseExerciseSingle>;
-
 export const trueFalseExerciseGroup = z.object({
   exercises: z.array(trueFalseExerciseSingle).min(1).max(2)
 })
 
-export interface TrueFalseExerciseGroup {
-  exercises: Array<TrueFalseExerciseSingle>;
-}
+export type TrueFalseExerciseSingle = z.infer<typeof trueFalseExerciseSingle>;
+export type TrueFalseExerciseGroup = z.infer<typeof trueFalseExerciseGroup>;
 
-export const multipleChoiceExerciseGroup = z.object({
-  exercises: z.array(multipleChoiceSingle).min(1).max(2)
+export const fillInBlankSingle = z.object({
+  type: z.literal('fill-in-blank'),
+  sentence: z.string().describe('Sentence with [BLANK] placeholder where user should fill in'),
+  correctAnswer: z.string().describe('The correct answer to fill in the blank'),
+  explanation: z.string().describe('Explanation of why this is the correct answer'),
+  context: z.string().describe('Additional context to help the user fill in the blank')
+});
+
+export const fillInBlankExerciseGroup = z.object({
+  exercises: z.array(fillInBlankSingle).min(1).max(2)
 })
 
-export interface MultipleChoiceExerciseGroup {
-  exercises: Array<MultipleChoiceSingle>;
-}
+export type FillInBlankSingle = z.infer<typeof fillInBlankSingle>;
+export type FillInBlankExerciseGroup = z.infer<typeof fillInBlankExerciseGroup>
+
+
 
 // Interface for API error response
 export interface ApiError {
