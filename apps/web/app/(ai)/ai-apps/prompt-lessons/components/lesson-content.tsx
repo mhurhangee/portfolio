@@ -3,10 +3,10 @@
 import { Badge } from "@workspace/ui/components/badge"
 import { Lesson, LessonContent } from "../schema"
 import LessonExamples from "./lesson-examples"
-import ExerciseWrapper from "./exercises/exercise-wrapper"
 import { Loader2 } from "lucide-react"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card"
+import Exercises from "./exercises"
 
 interface LessonContentViewProps {
   lesson: Lesson
@@ -105,22 +105,11 @@ export default function LessonContentView({
       <LessonExamples examples={content.examples} />
 
       <div className="space-y-4">
-        <h3 className="text-lg font-medium">Exercises</h3>
-        <div className="space-y-6">
-          {content.exercises.map((exercise) => (
-            <ExerciseWrapper 
-              key={exercise.id} 
-              exercise={exercise} 
-              lessonId={lesson.id} 
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-4">
         <h3 className="text-lg font-medium">Conclusion</h3>
         <p>{content.conclusion}</p>
       </div>
+
+      <Exercises lesson={lesson} content={content} />
     </div>
   )
 }

@@ -17,6 +17,7 @@ export interface AITool {
     isExperimental?: boolean; // Flag for experimental tools
     temperature?: number; // Sampling temperature for model
     maxTokens?: number; // Max tokens for model
+    validationRetries?: number; // Number of retries for validation
 }
 
 export interface AICategory {

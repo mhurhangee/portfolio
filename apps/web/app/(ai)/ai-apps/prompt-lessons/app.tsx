@@ -82,20 +82,25 @@ export default function PromptLessonsTool() {
                     if (!response.ok) {
                         console.log(response)
                         const errorData = await response.json();
-                        throw new Error(errorData.error?.message || 'Failed to fetch lesson content');
+                        throw new Error(errorData.error?.message || `Failed to fetch lesson content (${response.status})`);
                     }
                     
                     const data = await response.json();
                     console.log("API response:", data);
                     
-                    // Validate the response has the proper content structure
-                    if (data && data.content) {
-                        setLessonContent(data.content);
-                    } else {
-                        throw new Error('Invalid lesson content structure received from API');
+                    // Check if the API returned an error
+                    if (data.error) {
+                        throw new Error(data.error.message || 'An unknown error occurred');
                     }
                     
+                    // Ensure content exists in the response
+                    if (!data.content) {
+                        throw new Error('API response missing lesson content');
+                    }
+                    
+                    setLessonContent(data.content);
                     setIsLoading(false);
+                    
                 } catch (apiError: any) {
                     console.error("API error:", apiError);
                     setError({

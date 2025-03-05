@@ -3,10 +3,13 @@
 import { NextRequest } from 'next/server';
 import { generateObject } from 'ai';
 import { APP_CONFIG } from './config';
-import { lessonResponseSchema, exerciseFeedbackSchema } from './schema';
-import { runPreflightChecks } from '@/app/(ai)/lib/preflight-checks/preflight-checks';
-import { handlePreflightError } from '@/app/(ai)/lib/preflight-checks/error-handler';
-import { getUserInfo } from '../../lib/user-identification';
+import { exerciseFeedbackSchema } from './schema';
+//import { runPreflightChecks } from '@/app/(ai)/lib/preflight-checks/preflight-checks';
+//import { handlePreflightError } from '@/app/(ai)/lib/preflight-checks/error-handler';
+//import { getUserInfo } from '../../lib/user-identification';
+import { generateLessonWithRetries } from './server/generateLession';
+import { generateExercisesForLesson } from './server/generateExercise';
+
 
 export const runtime = 'edge';
 
@@ -33,10 +36,10 @@ export async function POST(req: NextRequest) {
     console.log('Input validation passed');
 
     // Get user information from request including ID, IP, and user agent
-    const { userId, ip, userAgent } = await getUserInfo(req);
+    //const { userId, ip, userAgent } = await getUserInfo(req);
     
     // Handle different request types
-    const { action, lessonId, exerciseId, userAnswer } = requestData;
+    const { action, lessonId, exerciseId, userAnswer, count = 3, existingExerciseIds = [] } = requestData;
     
     if (!action) {
       return Response.json(
@@ -83,20 +86,53 @@ export async function POST(req: NextRequest) {
       }
       console.log('Lesson ID validation passed', lessonId);
       
-      // Generate lesson content
-      const result = await generateObject({
-        model: APP_CONFIG.model,
-        system: APP_CONFIG.systemPrompt,
-        schema: lessonResponseSchema,
-        prompt: `Generate an interactive lesson about prompt engineering for the lesson with ID: "${lessonId}". Include an introduction, examples, exercises, and a conclusion.`,
-        temperature: APP_CONFIG.temperature,
-        maxTokens: APP_CONFIG.maxTokens,
-      });
-
-      console.log('Lesson content generated', result.object);
+      // Generate lesson content with retries and validation
+      try {
+        const lessonData = await generateLessonWithRetries(lessonId);
+        return Response.json(lessonData);
+      } catch (error: any) {
+        console.error('Error generating lesson:', error);
+        return Response.json(
+          { 
+            error: { 
+              code: 'generation_failed', 
+              message: error.message || 'Failed to generate lesson content', 
+              severity: 'error',
+              details: error.stack || error.toString()
+            } 
+          },
+          { status: 500 }
+        );
+      }
+    }
+    else if  (action === 'generateExercises') {
       
-      return Response.json(result.object);
-    } 
+      // Input validation
+      if (!lessonId) {
+        return Response.json(
+          { error: { code: 'invalid_request', message: 'Lesson ID is required', severity: 'error' } },
+          { status: 400 }
+        );
+      }
+      
+      try {
+        const exercises = await generateExercisesForLesson(lessonId, count, existingExerciseIds);
+        return Response.json({ exercises });
+      } catch (error: any) {
+        console.error('Error generating exercises:', error);
+        return Response.json(
+          { 
+            error: { 
+              code: 'exercise_generation_failed', 
+              message: error.message || 'Failed to generate exercises', 
+              severity: 'error',
+              details: error.stack || error.toString()
+            } 
+          },
+          { status: 500 }
+        );
+      }
+    }
     else if (action === 'submitExercise') {
       if (!lessonId || !exerciseId || !userAnswer) {
         return Response.json(

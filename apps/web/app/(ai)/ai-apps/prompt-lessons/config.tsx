@@ -26,5 +26,6 @@ When teaching prompt engineering:
     color: "from-blue-500 to-indigo-400",
     isNew: true,
     temperature: 0.2,
-    maxTokens: 1500
+    maxTokens: 1500,
+    validationRetries: 1
 }
