@@ -1,15 +1,13 @@
 // File: /home/mjh/front/apps/web/app/(ai)/ai-apps/prompt-lessons/route.ts
 
 import { NextRequest } from 'next/server';
-import { generateObject } from 'ai';
-import { APP_CONFIG } from './config';
-import { exerciseFeedbackSchema } from './schema';
+
 //import { runPreflightChecks } from '@/app/(ai)/lib/preflight-checks/preflight-checks';
 //import { handlePreflightError } from '@/app/(ai)/lib/preflight-checks/error-handler';
 //import { getUserInfo } from '../../lib/user-identification';
-import { generateLessonWithRetries } from './server/generateLession';
+import { generateLessonWithRetries } from './server/generateLesson';
 import { generateExercisesForLesson } from './server/generateExercise';
-
+import { generateEvaluation, generateConstructionEvaluation } from './server/generateEvaluation';
 
 export const runtime = 'edge';
 
@@ -39,7 +37,19 @@ export async function POST(req: NextRequest) {
     //const { userId, ip, userAgent } = await getUserInfo(req);
     
     // Handle different request types
-    const { action, lessonId, exerciseId, userAnswer, count = 3, existingExerciseIds = [], exercisePrompt } = requestData;
+    const { 
+      action, 
+      lessonId, 
+      exercisePrompt, 
+      criteria, 
+      improvement, 
+      original, 
+      sampleImprovement,
+      task,
+      scenario,
+      construction,
+      sampleSolution
+    } = requestData;
     
     if (!action) {
       return Response.json(
@@ -139,13 +149,14 @@ export async function POST(req: NextRequest) {
         );
       }
     }
-    else if (action === 'submitExercise') {
-      if (!lessonId || !exerciseId || !userAnswer) {
+    else if (action === 'evaluateImprovement') {
+      // Input validation for improvement evaluation
+      if (!original || !improvement || !criteria) {
         return Response.json(
           { 
             error: { 
               code: 'invalid_request', 
-              message: 'Lesson ID, exercise ID, and user answer are required', 
+              message: 'Original prompt, improvement, and criteria are required', 
               severity: 'error' 
             } 
           },
@@ -153,17 +164,65 @@ export async function POST(req: NextRequest) {
         );
       }
       
-      // Generate feedback for exercise submission
-      const result = await generateObject({
-        model: APP_CONFIG.model,
-        system: APP_CONFIG.systemPrompt,
-        schema: exerciseFeedbackSchema,
-        prompt: `Evaluate this prompt engineering exercise submission. Lesson ID: "${lessonId}", Exercise ID: "${exerciseId}". User's answer: "${userAnswer}". Provide detailed feedback.`,
-        temperature: APP_CONFIG.temperature,
-        maxTokens: APP_CONFIG.maxTokens,
-      });
+      try {
+        const evaluationData = await generateEvaluation(original, improvement, sampleImprovement, criteria);
+        return Response.json(evaluationData);
+      } catch (error: any) {
+        console.error('Error evaluating improvement:', error);
+        return Response.json(
+          { 
+            error: { 
+              code: 'evaluation_failed', 
+              message: error.message || 'Failed to evaluate improvement', 
+              severity: 'error',
+              details: error.stack || error.toString()
+            } 
+          },
+          { status: 500 }
+        );
+      }
+    }
+    else if (action === 'evaluateConstruction') {
+      // Input validation for construction evaluation
+      if (!task || !scenario || !construction || !criteria) {
+        return Response.json(
+          { 
+            error: { 
+              code: 'invalid_request', 
+              message: 'Task, scenario, constructed prompt, and criteria are required', 
+              severity: 'error' 
+            } 
+          },
+          { status: 400 }
+        );
+      }
       
-      return Response.json(result.object);
+      try {
+        // Ensure criteria is an array
+        const criteriaArray = Array.isArray(criteria) ? criteria : [criteria];
+        
+        const evaluationData = await generateConstructionEvaluation(
+          task, 
+          scenario, 
+          construction, 
+          criteriaArray, 
+          sampleSolution
+        );
+        return Response.json(evaluationData);
+      } catch (error: any) {
+        console.error('Error evaluating construction:', error);
+        return Response.json(
+          { 
+            error: { 
+              code: 'evaluation_failed', 
+              message: error.message || 'Failed to evaluate constructed prompt', 
+              severity: 'error',
+              details: error.stack || error.toString()
+            } 
+          },
+          { status: 500 }
+        );
+      }
     }
     else {
       return Response.json(

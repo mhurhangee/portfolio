@@ -32,10 +32,10 @@ export const lessonContentSchema = z.object({
     description: z.string()
       .describe('Explanation of the principle'),
     examples: z.array(z.object({
-      good: z.string().describe('Example demonstrating good use of this principle'),
-      bad: z.string().describe('Example demonstrating poor use of this principle'),
-      explanation: z.string().describe('Explanation of why the good example follows this principle better'),
-    })).min(1).describe('Examples showing the principle in action'),
+      good: z.string().describe('Example prompts demonstrating good use of this principle'),
+      bad: z.string().describe('Example prompts demonstrating poor use of this principle'),
+      explanation: z.string().describe('Explanation of why the good example prompt follows this principle better'),
+    })).min(1).describe('Example prompts showing the principle in action.'),
   })).min(1).describe('Key principles or components of the topic'),
   applications: z.array(z.object({
     scenario: z.string()
@@ -44,6 +44,8 @@ export const lessonContentSchema = z.object({
   conclusion: z.string()
     .describe('Summary of key takeaways and importance of the topic'),
 });
+
+export const lessonContentOptionalSchema = lessonContentSchema;
 
 export type LessonContent = z.infer<typeof lessonContentSchema>;
 
@@ -113,6 +115,42 @@ export const fillInBlankExerciseGroup = z.object({
 
 export type FillInBlankSingle = z.infer<typeof fillInBlankSingle>;
 export type FillInBlankExerciseGroup = z.infer<typeof fillInBlankExerciseGroup>
+
+export const improveExerciseSingle = z.object({
+  type: z.literal('improve'),
+  promptToImprove: z.string().describe('The prompt or text that needs improvement'),
+  context: z.string().describe('Context explaining what needs to be improved and why'),
+  sampleImprovement: z.string().describe('A sample improved version for reference'),
+  criteria: z.array(z.string()).describe('List of criteria to evaluate the improvement against')
+});
+
+export const improveExerciseGroup = z.object({
+  exercises: z.array(improveExerciseSingle).min(1).max(2)
+})
+
+export type ImproveExerciseSingle = z.infer<typeof improveExerciseSingle>;
+export type ImproveExerciseGroup = z.infer<typeof improveExerciseGroup>;
+
+export const constructExerciseSingle = z.object({
+  type: z.literal('construct'),
+  task: z.string().describe('The task requirements for constructing a prompt'),
+  scenario: z.string().describe('Context or scenario for which the prompt should be created'),
+  criteria: z.array(z.string()).describe('List of criteria to evaluate the constructed prompt against'),
+  sampleSolution: z.string().describe('A sample well-constructed prompt for reference').optional()
+});
+
+export const constructExerciseGroup = z.object({
+  exercises: z.array(constructExerciseSingle).min(1).max(2)
+})
+
+export type ConstructExerciseSingle = z.infer<typeof constructExerciseSingle>;
+export type ConstructExerciseGroup = z.infer<typeof constructExerciseGroup>;
+
+export const evaluationResultSchema = z.object({
+  isGoodImprovement: z.boolean(),
+  feedback: z.string(),
+  suggestedImprovement: z.string().optional()
+});
 
 
 

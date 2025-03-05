@@ -132,7 +132,7 @@ export default function LessonContentView({
                 {/* Examples within each principle */}
                 <div className="space-y-3 mt-4">
                   <h5 className="text-sm font-medium">Examples</h5>
-                  {principle.examples.map((example, exIndex) => (
+                  {principle.examples?.map((example, exIndex) => (
                     <div key={exIndex} className="space-y-3 bg-accent/20 p-4 rounded-md">
                       <div>
                         <p className="font-medium flex items-center mb-2 text-sm">

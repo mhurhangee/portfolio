@@ -11,8 +11,6 @@ export const generateLessonWithRetries = async (lessonId: string): Promise<any> 
     if (!lesson) {
       throw new Error(`Lesson with ID "${lessonId}" not found`);
     }
-    
-    // Use the lesson's generation prompt if available, otherwise use a default prompt
     const promptText = APP_CONFIG.systemPrompt +
       `
       # Task
@@ -23,13 +21,10 @@ export const generateLessonWithRetries = async (lessonId: string): Promise<any> 
     let attempt = 0;
     let lastError = null;
     
-
-    // Try multiple times
     while (attempt < maxRetries) {
       attempt++;
       
       try {
-        // Generate only the content part
         const result = await generateObject({
           model: APP_CONFIG.model,
           system: APP_CONFIG.systemPrompt,
@@ -38,14 +33,12 @@ export const generateLessonWithRetries = async (lessonId: string): Promise<any> 
           temperature: APP_CONFIG.temperature,
           maxTokens: APP_CONFIG.maxTokens,
         });
-        
-        // Check if we got a result
+
         if (!result || !result.object) {
           lastError = new Error('Empty generation result');
           continue;
         }
         
-        // Validate the generated content
         const validation = validateSchema(lessonContentSchema, result.object);
         if (!validation.isValid) {
           lastError = new Error(`Validation failed: ${validation.errors.join(', ')}`);
