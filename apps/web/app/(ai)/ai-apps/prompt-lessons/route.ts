@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    console.log('Input validation passed');
 
     // Get user information from request including ID, IP, and user agent
     const { userId, ip, userAgent } = await getUserInfo(req);
@@ -49,7 +50,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    console.log('Action validation passed', action);
     
+    /*
     // Run preflight checks with content from request
     const preflightContent = action === 'submitExercise' ? userAnswer : '';
     const preflightResult = await runPreflightChecks(userId, preflightContent, ip, userAgent);
@@ -61,10 +64,12 @@ export async function POST(req: NextRequest) {
     }
 
     console.log("Preflight checks passed, processing request...");
+    */
 
     // Process based on action type
     if (action === 'getLesson') {
       if (!lessonId) {
+        console.log('Lesson ID is required');
         return Response.json(
           { 
             error: { 
@@ -76,6 +81,7 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+      console.log('Lesson ID validation passed', lessonId);
       
       // Generate lesson content
       const result = await generateObject({
@@ -86,6 +92,8 @@ export async function POST(req: NextRequest) {
         temperature: APP_CONFIG.temperature,
         maxTokens: APP_CONFIG.maxTokens,
       });
+
+      console.log('Lesson content generated', result.object);
       
       return Response.json(result.object);
     } 

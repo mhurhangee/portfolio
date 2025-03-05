@@ -10,17 +10,21 @@ interface TrueFalseExerciseProps {
   exercise: Exercise
   lessonId: string
   onSubmit: (exerciseId: string, answer: string) => Promise<ExerciseFeedback | undefined>
+  isSubmitting?: boolean
 }
 
-export default function TrueFalseExercise({ exercise, lessonId, onSubmit }: TrueFalseExerciseProps) {
+export default function TrueFalseExercise({ exercise, lessonId, onSubmit, isSubmitting = false }: TrueFalseExerciseProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [localIsSubmitting, setLocalIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState<ExerciseFeedback | null>(null)
+  
+  // Combining local and prop-based submission state
+  const isBusy = isSubmitting || localIsSubmitting
   
   const handleSubmit = async () => {
     if (selectedAnswer === null) return
     
-    setIsSubmitting(true)
+    setLocalIsSubmitting(true)
     try {
       // Convert boolean to string for API
       const answer = selectedAnswer ? "true" : "false"
@@ -32,7 +36,7 @@ export default function TrueFalseExercise({ exercise, lessonId, onSubmit }: True
     } catch (error) {
       console.error("Error submitting exercise:", error)
     } finally {
-      setIsSubmitting(false)
+      setLocalIsSubmitting(false)
     }
   }
   
@@ -82,7 +86,7 @@ export default function TrueFalseExercise({ exercise, lessonId, onSubmit }: True
               variant={selectedAnswer === true ? "default" : "outline"}
               className={`p-6 h-auto flex justify-center ${selectedAnswer === true ? 'ring-2 ring-primary' : ''}`}
               onClick={() => setSelectedAnswer(true)}
-              disabled={isSubmitting}
+              disabled={isBusy}
             >
               True
             </Button>
@@ -90,7 +94,7 @@ export default function TrueFalseExercise({ exercise, lessonId, onSubmit }: True
               variant={selectedAnswer === false ? "default" : "outline"}
               className={`p-6 h-auto flex justify-center ${selectedAnswer === false ? 'ring-2 ring-primary' : ''}`}
               onClick={() => setSelectedAnswer(false)}
-              disabled={isSubmitting}
+              disabled={isBusy}
             >
               False
             </Button>
@@ -98,10 +102,10 @@ export default function TrueFalseExercise({ exercise, lessonId, onSubmit }: True
           
           <Button 
             className="w-full mt-4" 
-            disabled={selectedAnswer === null || isSubmitting}
+            disabled={selectedAnswer === null || isBusy}
             onClick={handleSubmit}
           >
-            {isSubmitting ? 'Checking...' : 'Submit Answer'}
+            {isBusy ? 'Checking...' : 'Submit Answer'}
           </Button>
         </>
       )}
