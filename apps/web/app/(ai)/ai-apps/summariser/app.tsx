@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Send, RotateCcw, CheckCircle2, StopCircle, Shovel } from "lucide-react"
+import { Send, RotateCcw, CheckCircle2, StopCircle, ClipboardCheck } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Textarea } from "@workspace/ui/components/textarea"
@@ -11,18 +11,19 @@ import { PreflightError } from "@/app/(ai)/components/preflight-error"
 import { getErrorDisplay } from "@/app/(ai)/lib/preflight-checks/error-handler"
 import { container, item } from "@/lib/animation"
 import { APP_CONFIG } from "./config"
-import { type KeywordsResponse} from "./schema"
+import { type SummaryResponse} from "./schema"
 import React from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
+import ReactMarkdown from "react-markdown"
 
 export default function KeywordExtractorTool() {
     const [activeTab, setActiveTab] = useState("text")
     const [userPrompt, setUserPrompt] = useState("")
     const [error, setError] = useState<any>(null)
-    const [keywordResponse, setKeywordResponse] = useState<KeywordsResponse | null>(null)
+    const [summaryResponse, setSummaryResponse] = useState<SummaryResponse | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [isAborted, setIsAborted] = useState(false)
-    const [keywordType, setKeywordType] = useState("general")
+    const [summaryType, setSummaryType] = useState("general")
 
     // Create a ref to store abort controller
     const abortControllerRef = React.useRef<AbortController | null>(null)
@@ -37,13 +38,12 @@ export default function KeywordExtractorTool() {
             setIsLoading(true)
             setIsAborted(false)
             
-            setActiveTab("extraction")
+            setActiveTab("summary")
             
             // Create a new AbortController for this request
             abortControllerRef.current = new AbortController()
             const signal = abortControllerRef.current.signal
             
-            console.log('Submitting prompt:', userPrompt)
             
             const response = await fetch(APP_CONFIG.apiRoute, {
                 method: 'POST',
@@ -51,7 +51,7 @@ export default function KeywordExtractorTool() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    keywordType,
+                    summaryType,
                     userPrompt
                 }),
                 signal
@@ -59,15 +59,14 @@ export default function KeywordExtractorTool() {
             
             if (!response.ok) {
                 const errorData = await response.json()
-                throw new Error(errorData.error?.message || 'Failed to generate extraction')
+                throw new Error(errorData.error?.message || 'Failed to generate summary')
             }
             
             const data = await response.json()
-            console.log("Response data:", data)
-            setKeywordResponse(data)
+            console.log(data)
+            setSummaryResponse(data)
             
         } catch (err: any) {
-            console.error("Failed to submit prompt:", err)
             
             // Don't set error for aborted requests
             if (err.name === 'AbortError') {
@@ -99,7 +98,7 @@ export default function KeywordExtractorTool() {
         setUserPrompt("")
         setActiveTab("text")
         setError(null)
-        setKeywordResponse(null)
+        setSummaryResponse(null)
         setIsLoading(false)
         setIsAborted(false)
         
@@ -136,19 +135,19 @@ export default function KeywordExtractorTool() {
                 <Card className="overflow-hidden">
                     <CardHeader>
                         <CardTitle className="flex items-center">
-                            <Shovel className="mr-2 h-5 w-5 text-primary" />
-                            Extract Keywords
+                            <ClipboardCheck className="mr-2 h-5 w-5 text-primary" />
+                            Summarise Text
                         </CardTitle>
                         <CardDescription>
-                            Extract keywords from text
+                            Generate summaries of longer texts
                         </CardDescription>
                     </CardHeader>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <div className="px-6">
                             <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="text">Text to analyse</TabsTrigger>
-                                <TabsTrigger value="extraction" disabled={activeTab === "text" && !isLoading}>Extracted Keywords</TabsTrigger>
+                                <TabsTrigger value="text">Text to summarise</TabsTrigger>
+                                <TabsTrigger value="summary" disabled={activeTab === "text" && !isLoading}>Summary</TabsTrigger>
                             </TabsList>
                         </div>
 
@@ -160,16 +159,16 @@ export default function KeywordExtractorTool() {
                                             {errorConfig && <PreflightError config={errorConfig} />}
 
                                             <div className="space-y-2">
-                                                <h3 className="text-sm font-medium">Keyword Type</h3>
-                                                <Select onValueChange={(value) => setKeywordType(value)}>
+                                                <h3 className="text-sm font-medium">Summary Type</h3>
+                                                <Select onValueChange={(value) => setSummaryType(value)}>
                                                     <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder="Select keyword type" />
+                                                        <SelectValue placeholder="Select summary type" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="general">General</SelectItem>
-                                                        <SelectItem value="names">Names</SelectItem>
-                                                        <SelectItem value="locations">Locations</SelectItem>
-                                                        <SelectItem value="organizations">Organizations</SelectItem>
+                                                        <SelectItem value="outline">Outline</SelectItem>
+                                                        <SelectItem value="executive-summary">Executive Summary</SelectItem>
+                                                        <SelectItem value="single-sentence">Single Sentence</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -178,7 +177,7 @@ export default function KeywordExtractorTool() {
                                                 <h3 className="text-sm font-medium">Your Text</h3>
                                                     <Textarea
                                                         withCounter
-                                                        placeholder="Enter the text you want to analyze..."
+                                                        placeholder="Enter the text you want to summarise..."
                                                         className="min-h-[150px] resize-none pr-16"
                                                         value={userPrompt}
                                                         onChange={(e) => {
@@ -189,7 +188,7 @@ export default function KeywordExtractorTool() {
                                                         maxLength={1000}
                                                     />
                                                 <p className="text-xs text-muted-foreground">
-                                                    Enter the text from which you want to extract keywords.
+                                                    Enter the text from which you want to summarise.
                                                 </p>
                                             </div>
 
@@ -199,11 +198,11 @@ export default function KeywordExtractorTool() {
                                                 className="w-full sm:w-auto"
                                             >
                                                 {isLoading ? (
-                                                    <>Extracting keywords...</>
+                                                    <>Generating summary...</>
                                                 ) : (
                                                     <>
                                                         <Send className="mr-2 h-4 w-4" />
-                                                        Extract Keywords
+                                                        Generate Summary
                                                     </>
                                                 )}
                                             </Button>
@@ -213,7 +212,7 @@ export default function KeywordExtractorTool() {
                             </CardContent>
                         </TabsContent>
 
-                        <TabsContent value="extraction" className="m-0 space-y-0">
+                        <TabsContent value="summary" className="m-0 space-y-0">
                             {isLoading ? (
                                 <div className="p-6">
                                     <div className="flex flex-col items-center justify-center space-y-4">
@@ -222,40 +221,42 @@ export default function KeywordExtractorTool() {
                                             <div className="h-4 bg-muted rounded w-1/2 mx-auto"></div>
                                             <div className="h-4 bg-muted rounded w-5/6 mx-auto"></div>
                                         </div>
-                                        <p className="text-muted-foreground">Extracting keywords...</p>
+                                        <p className="text-muted-foreground">Generating summary...</p>
                                         <Button 
                                             variant="outline" 
                                             size="sm" 
                                             onClick={handleStop}
                                         >
                                             <StopCircle className="mr-2 h-4 w-4" />
-                                            Stop Extraction
+                                            Stop Generation
                                         </Button>
                                     </div>
                                 </div>
                             ) : isAborted ? (
                                 <div className="p-6 text-center text-muted-foreground">
-                                    <p>Extraction was stopped. Submit a new text to continue.</p>
+                                    <p>Summary generation was stopped. Submit a new text to continue.</p>
                                 </div>
-                            ) : !keywordResponse ? (
+                            ) : !summaryResponse ? (
                                 <div className="p-6 text-center text-muted-foreground">
-                                    Submit a text to see extracted keywords here.
+                                    Submit a text to see generated summary here.
                                 </div>
                             ) : (
                                 <div className="p-6 space-y-4">
                                     <h3 className="text-lg font-medium flex items-center">
                                         <CheckCircle2 className="mr-2 h-5 w-5 text-green-500" />
-                                        Extracted Keywords
+                                        Generated Summary
                                     </h3>
                                     <div className="space-y-4">
-                                        {keywordResponse.keywords.map((keyword, index) => (
-                                            <Card key={index} className="bg-muted">
+                                            <Card>
                                                 <CardHeader>
-                                                    <CardTitle>{keyword.keyword}</CardTitle>
-                                                    <CardDescription>{keyword.context}</CardDescription>
+                                                    <CardTitle>Your summary</CardTitle>
                                                 </CardHeader>
+                                                <CardContent>
+                                                    <div className="prose dark:prose-invert">
+                                                        <ReactMarkdown>{summaryResponse.summary}</ReactMarkdown>
+                                                    </div>
+                                                </CardContent>
                                             </Card>
-                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -270,7 +271,7 @@ export default function KeywordExtractorTool() {
                             disabled={isLoading}
                         >
                             <RotateCcw className="mr-2 h-4 w-4" />
-                            Start New Extraction
+                            New Summary
                         </Button>
                     </CardFooter>
                 </Card>

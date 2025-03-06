@@ -1,9 +1,9 @@
-// File: /home/mjh/front/apps/web/app/(ai)/ai-apps/prompt-tutor/route.ts
+// File: /home/mjh/front/apps/web/app/(ai)/ai-apps/summariser/route.ts
 
 import { NextRequest } from 'next/server';
 import { generateObject } from 'ai';
 import { APP_CONFIG } from './config';
-import { keywordsExtractionSchema } from './schema';
+import { summaryResponseSchema } from './schema';
 import { runPreflightChecks } from '@/app/(ai)/lib/preflight-checks/preflight-checks';
 import { handlePreflightError } from '@/app/(ai)/lib/preflight-checks/error-handler';
 import { getUserInfo } from '../../lib/user-identification';
@@ -13,7 +13,7 @@ export const runtime = 'edge';
 export async function POST(req: NextRequest) {
   try {
     // Extract the prompt string directly from the request body
-    const { keywordType, userPrompt } = await req.json();
+    const { summaryType, userPrompt } = await req.json();
     console.log("Received prompt:", userPrompt.slice(0, 50) + '...');
     
     // Input validation
@@ -55,19 +55,31 @@ export async function POST(req: NextRequest) {
     
     // If preflight checks fail, return the error
     if (!preflightResult.passed && preflightResult.result) {
-      console.log("Preflight checks failed:", preflightResult.result);
+        console.log("Preflight checks failed:", preflightResult.result);
       const errorResponse = handlePreflightError(preflightResult.result);
       return Response.json(errorResponse, { status: 400 });
     }
 
     console.log("Preflight checks passed, generating response...");
 
+    let summaryPrompt = ``;
+
+    if (summaryType === 'outline') {
+      summaryPrompt += 'Generate a summary of the following text in an outline format. Use markdown headings to and bullet points to represent the main points.';
+    } else if (summaryType === 'executive-summary') {
+      summaryPrompt += 'Generate a summary of the following text in an executive summary format.';
+    } else if (summaryType === 'single-sentence') {
+      summaryPrompt += 'Generate a summary of the following text in a single sentence.';
+    }
+
+    summaryPrompt += `\n\nText: ${userPrompt}`;
+
     // If all checks pass, generate the object (non-streaming)
     const result = await generateObject({
       model: APP_CONFIG.model,
       system: APP_CONFIG.systemPrompt,
-      schema: keywordsExtractionSchema,
-      prompt: `Focus on extracting ${keywordType} keywords from the following text: "${userPrompt}"`,
+      schema: summaryResponseSchema,
+      prompt: summaryPrompt,
       temperature: APP_CONFIG.temperature,
       maxTokens: APP_CONFIG.maxTokens,
     });

@@ -19,7 +19,7 @@ Use the provided schema to structure your response as JSON.
     apiRoute: '/api/ai/keyword-extractor',
     category: 'text',
     color: "from-emerald-500 to-teal-400",
-    isNew: true,
+    isNew: false,
     temperature: DEFAULT_CONFIG.temperature,
     maxTokens: DEFAULT_CONFIG.maxTokens
 }
