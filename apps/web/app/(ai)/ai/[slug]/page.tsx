@@ -10,6 +10,7 @@ const PromptTutorTool = dynamic(() => import("@/app/(ai)/ai-apps/prompt-tutor/ap
 const PromptLessonsTool = dynamic(() => import("@/app/(ai)/ai-apps/prompt-lessons/app"))
 const KeywordExtractorTool = dynamic(() => import("@/app/(ai)/ai-apps/keyword-extractor/app"))
 const SummariserTool = dynamic(() => import("@/app/(ai)/ai-apps/summariser/app"))
+const InlinePromptRewriterTool = dynamic(() => import("@/app/(ai)/ai-apps/inline-prompt-rewriter/app"))
 
 export default async function ToolPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -36,6 +37,9 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
     }
     if (tool.id === 'summariser') {
       return <SummariserTool />
+    }
+    if (tool.id === 'inline-prompt-rewriter') {
+      return <InlinePromptRewriterTool />
     }
     
     // Default fallback

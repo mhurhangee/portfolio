@@ -1,5 +1,3 @@
-// File: /home/mjh/front/apps/web/app/(ai)/components/tools/prompt-rewriter.tsx
-
 "use client"
 
 import { useState, useCallback } from "react"

@@ -43,8 +43,6 @@ export default function KeywordExtractorTool() {
             abortControllerRef.current = new AbortController()
             const signal = abortControllerRef.current.signal
             
-            console.log('Submitting prompt:', userPrompt)
-            
             const response = await fetch(APP_CONFIG.apiRoute, {
                 method: 'POST',
                 headers: {
@@ -63,11 +61,9 @@ export default function KeywordExtractorTool() {
             }
             
             const data = await response.json()
-            console.log("Response data:", data)
             setKeywordResponse(data)
             
         } catch (err: any) {
-            console.error("Failed to submit prompt:", err)
             
             // Don't set error for aborted requests
             if (err.name === 'AbortError') {

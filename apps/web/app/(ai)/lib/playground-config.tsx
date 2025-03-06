@@ -6,14 +6,16 @@ import { APP_CONFIG as PromptTutorConfig } from "../ai-apps/prompt-tutor/config"
 import { APP_CONFIG as PromptLessonsConfig } from "../ai-apps/prompt-lessons/config";
 import { APP_CONFIG as KeywordExtractorConfig } from "../ai-apps/keyword-extractor/config";
 import { APP_CONFIG as SummariserConfig } from "../ai-apps/summariser/config";
+import { APP_CONFIG as InlinePromptRewriterConfig } from "../ai-apps/inline-prompt-rewriter/config";
 
 // Only define the prompt rewriter for now
 export const aiTools: AITool[] = [
+  PromptLessonsConfig,
   PromptRewriterConfig,
   PromptTutorConfig,
-  PromptLessonsConfig,
   KeywordExtractorConfig,
-  SummariserConfig
+  SummariserConfig,
+  InlinePromptRewriterConfig
 ];
 
 // Organize applications by category
