@@ -14,7 +14,12 @@ export const generateLessonWithRetries = async (lessonId: string): Promise<any> 
     const promptText = APP_CONFIG.systemPrompt +
       `
       # Task
-      To help teach users about AI topics, by generating lesson content about the topic: "${lesson.topic}", for a lesson titled: "${lesson.title}", with the teaching goal being: "${lesson.description}". The lesson content should match the lesson difficulty: "${lesson.difficulty}" with a particular focus on the category: "${lesson.category}".` ;
+      To help teach users about AI topics, by generating lesson content about the topic: "${lesson.topic}", for a lesson titled: "${lesson.title}", with the teaching goal being: "${lesson.description}". The lesson content should match the lesson difficulty: "${lesson.difficulty}".
+      
+      This lesson will be part of a series of lessons, so the lesson content should really focus on and be very detailed about ${lesson.topic}.
+
+      The length of your lesson content and examples you give should be suitable for the lesson difficulty: "${lesson.difficulty}".  I.e. for advanced content provide longer explanations and give longer and more complex examples.
+      ` ;
     
     const maxRetries = APP_CONFIG.validationRetries || 1;
 

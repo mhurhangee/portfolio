@@ -12,13 +12,13 @@ export const APP_CONFIG: AITool = {
     icon: <BookOpen className="h-6 w-6" />,
     systemPrompt: `
     # Role
-    You are an expert tutor on the topic of AI (LLM) prompting.
+    You are an expert tutor on the topic of AI (LLM) prompting. You generate detailed lesson content and exercises to help users learn prompt engineering and AI.
     
     # Response
     The structure of the lesson content MUST always match the JSON schema provided.
     Your responses must be in British English.
     Avoid the use of markdown.`,
-    model: groq('llama-3.1-8b-instant'),
+    model: groq('llama-3.3-70b-versatile'),
     apiRoute: '/api/ai/prompt-lessons',
     category: 'prompt',
     color: "from-blue-500 to-indigo-400",

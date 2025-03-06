@@ -1,7 +1,7 @@
 // File: /home/mjh/front/apps/web/app/(ai)/ai-apps/prompt-lessons/app.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { RotateCcw } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardFooter } from "@workspace/ui/components/card"
@@ -23,27 +23,50 @@ export default function PromptLessonsTool() {
     const [error, setError] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [currentLessons, setCurrentLessons] = useState<Lesson[]>([])
+    
+    // Reference to the top of the component for scrolling
+    const topRef = useRef<HTMLDivElement>(null)
 
     // Initialize lessons
     useEffect(() => {
         setCurrentLessons(getAllLessons())
     }, [])
+    
+    // Effect to scroll to top when active tab changes OR when lesson content loads
+    useEffect(() => {
+        // Small delay to ensure DOM has updated with new content
+        const scrollTimer = setTimeout(() => {
+            if (topRef.current) {
+                topRef.current.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                // Fallback if ref isn't available
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }, 100);
+        
+        return () => clearTimeout(scrollTimer);
+    }, [activeTab, lessonContent]);
 
     // Function to handle lesson selection and fetch lesson content
     const handleSelectLesson = async (lesson: Lesson) => {
         try {
+            // Preflight check: Ensure we have a valid lesson object
+            if (!lesson || typeof lesson !== 'object') {
+                throw new Error("Invalid lesson provided");
+            }
+            
+            // Preflight check: Ensure lesson ID is valid
+            if (!lesson.id || typeof lesson.id !== 'string') {
+                throw new Error("Invalid lesson ID");
+            }
+
+
             setSelectedLesson(lesson)
             setLessonContent(undefined)
             setError(null)
             setIsLoading(true)
             setActiveTab("lesson")
 
-            console.log("Fetching lesson content for:", lesson.id)
-
-            // Preflight check: Ensure lesson ID is valid
-            if (!lesson?.id) {
-                throw new Error("Invalid lesson ID");
-            }
 
             try {
                 const response = await fetch('/api/ai/prompt-lessons', {
@@ -109,9 +132,9 @@ export default function PromptLessonsTool() {
 
     const errorConfig = error ? getErrorDisplay({
         passed: false,
-        code: error.code,
-        message: error.message,
-        severity: error.severity,
+        code: error.code || 'unknown_error',
+        message: error.message || 'An unknown error occurred',
+        severity: error.severity || 'error',
         details: error.details
     }) : null
 
@@ -122,6 +145,9 @@ export default function PromptLessonsTool() {
             animate="visible"
             className="space-y-8"
         >
+            {/* Reference div at the top of the component for scrolling */}
+            <div ref={topRef} aria-hidden={true} />
+            
             <motion.div variants={item} className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">{APP_CONFIG.name}</h1>
                 <p className="text-muted-foreground">

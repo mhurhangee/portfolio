@@ -1,7 +1,18 @@
 import { z } from 'zod';
 
-export const allDifficulties = ['Beginner', 'Intermediate', 'Advanced'] as const
-export const allCategories = ['Fundamentals', 'Clarity', 'Specificity', 'Structure', 'Context'] as const
+export const allDifficulties = ['Beginner', 'Intermediate', 'Advanced'] as const;
+export const allCategories = [
+  'Fundamentals', 
+  'Clarity', 
+  'Specificity', 
+  'Structure', 
+  'Context',
+  'Techniques',
+  'Frameworks',
+  'Use Cases',
+  'Ethics',
+  'Evaluation'
+] as const;
 
 export const difficultySchema = z.enum(allDifficulties);
 export const categorySchema = z.enum(allCategories);
@@ -30,10 +41,10 @@ export const lessonContentSchema = z.object({
     title: z.string()
       .describe('Name of the principle'),
     description: z.string()
-      .describe('Explanation of the principle'),
+      .describe('A short paragraph explaining the principle'),
     examples: z.array(z.object({
-      good: z.string().describe('Example prompts demonstrating good use of this principle'),
-      bad: z.string().describe('Example prompts demonstrating poor use of this principle'),
+      good: z.string().describe('Example demonstrating good use of this principle'),
+      bad: z.string().describe('Example demonstrating poor use of this principle'),
       explanation: z.string().describe('Explanation of why the good example prompt follows this principle better'),
     })).min(1).describe('Example prompts showing the principle in action.'),
   })).min(1).describe('Key principles or components of the topic'),
