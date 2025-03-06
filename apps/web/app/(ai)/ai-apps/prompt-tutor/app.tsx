@@ -160,6 +160,8 @@ export default function PromptTutorTool() {
                                             <div className="space-y-2">
                                                 <h3 className="text-sm font-medium">Your Prompt</h3>
                                                 <Textarea
+                                                    withCounter
+                                                    maxLength={1000}
                                                     placeholder="Enter a prompt you want to analyze and improve..."
                                                     className="min-h-[150px] resize-none"
                                                     value={userPrompt}

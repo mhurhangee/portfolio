@@ -4,12 +4,14 @@ import { AITool, AICategory } from "@/app/(ai)/lib/types"
 import { APP_CONFIG as PromptRewriterConfig } from "../ai-apps/basic-prompt-rewriter/config";
 import { APP_CONFIG as PromptTutorConfig } from "../ai-apps/prompt-tutor/config";
 import { APP_CONFIG as PromptLessonsConfig } from "../ai-apps/prompt-lessons/config";
+import { APP_CONFIG as KeywordExtractorConfig } from "../ai-apps/keyword-extractor/config";
 
 // Only define the prompt rewriter for now
 export const aiTools: AITool[] = [
   PromptRewriterConfig,
   PromptTutorConfig,
-  PromptLessonsConfig
+  PromptLessonsConfig,
+  KeywordExtractorConfig
 ];
 
 // Organize applications by category
@@ -18,6 +20,11 @@ export const aiCategories: AICategory[] = [
     name: "Prompt Helpers" ,
     description: "Utilities to help you craft more effective AI prompts",
     apps: aiTools.filter(app => app.category === 'prompt')
+  },
+  {
+    name: "Text Analysis",
+    description: "Utilities to help you analyse text",
+    apps: aiTools.filter(app => app.category === 'text'),
   }
 ];
 

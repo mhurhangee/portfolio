@@ -111,6 +111,8 @@ export default function BasicPromptRewriterTool() {
               
               <form onSubmit={handleSubmit} className="grid gap-4">
                 <Textarea
+                  withCounter
+                  maxLength={1000}
                   placeholder="Enter your prompt here..."
                   className="min-h-32 resize-none"
                   value={input}

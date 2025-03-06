@@ -7,7 +7,7 @@ import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { container, item } from "@/lib/animation"
-import { aiCategories, getAllApps } from "@/app/(ai)/lib/playground-config"
+import { aiCategories } from "@/app/(ai)/lib/playground-config"
 import { ArrowRight } from "lucide-react"
 
 export default function AIPlayground() {

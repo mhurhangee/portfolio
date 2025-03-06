@@ -1,6 +1,6 @@
 import { AITool } from "@/app/(ai)/lib/types"
 import { Sparkles } from "lucide-react"
-import { groq } from "@ai-sdk/groq"
+import { DEFAULT_CONFIG } from "@/app/(ai)/lib/defaults"
 
 export const APP_CONFIG: AITool = {
     id: "basic-prompt-rewriter",
@@ -21,11 +21,11 @@ When rewriting prompts:
 
 YOU MUST ALWAYS RETURN A WRITTEN PROMPT. 
 Return only the rewritten prompt without explanation, commentary, or surrounding text.`,
-    model: groq('llama-3.1-8b-instant'),
+    model: DEFAULT_CONFIG.model,
     apiRoute: '/api/ai/basic-prompt-rewriter',
     category: 'prompt',
     color: "from-blue-500 to-cyan-400",
     isNew: false,
-    temperature: 0.3,
-    maxTokens: 1000
+    temperature: DEFAULT_CONFIG.temperature,
+    maxTokens: DEFAULT_CONFIG.maxTokens
   }

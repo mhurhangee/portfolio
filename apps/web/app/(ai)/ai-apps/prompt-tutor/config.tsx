@@ -2,7 +2,7 @@
 
 import { AITool } from "@/app/(ai)/lib/types"
 import { BookOpen } from "lucide-react"
-import { groq } from "@ai-sdk/groq"
+import { DEFAULT_CONFIG } from "@/app/(ai)/lib/defaults"
 
 export const APP_CONFIG: AITool = {
     id: "prompt-tutor",
@@ -20,11 +20,11 @@ When analyzing user prompts:
 3. Provide specific examples of how to improve
 4. Use a supportive, educational tone
 5. Reference prompt engineering principles and best practices`,
-    model: groq('llama-3.1-8b-instant'),
+    model: DEFAULT_CONFIG.model,
     apiRoute: '/api/ai/prompt-tutor',
     category: 'prompt',
     color: "from-purple-500 to-indigo-400",
     isNew: true,
-    temperature: 0.2,
-    maxTokens: 1500
+    temperature: DEFAULT_CONFIG.temperature,
+    maxTokens: DEFAULT_CONFIG.maxTokens
 }
