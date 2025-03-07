@@ -9,11 +9,11 @@ import { logger } from '@/app/(ai)/lib/error-handling/logger';
 export const runtime = 'edge'
 export const maxDuration = 60
 
-async function handler(req: NextRequest, requestId: string) {
+async function handler(req: NextRequest) {
   try {
     // Get user information from request including ID, IP, and user agent
     const { userId, ip, userAgent } = await getUserInfo(req);
-    
+    const requestId = req.headers.get('X-Request-ID') || 'unknown';
     // Create request context for logging
     const requestContext = {
       path: req.nextUrl.pathname,

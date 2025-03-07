@@ -31,7 +31,7 @@ export interface ApiError {
 /**
  * Creates a wrapped API handler with Logtail integration and request ID tracking
  */
-export function createApiHandler(handler: (req: NextRequest, requestId: string) => Promise<Response>) {
+export function createApiHandler(handler: (req: NextRequest) => Promise<Response>) {
   return withLogtail(async (req: NextRequest) => {
     // Generate a unique request ID
     const requestId = uuidv4();
@@ -44,8 +44,25 @@ export function createApiHandler(handler: (req: NextRequest, requestId: string) 
         requestId
       });
       
-      // Call the handler with the request ID
-      const response = await handler(req, requestId);
+      // Set requestId in request headers so handler functions can access it
+      const reqWithId = new NextRequest(req.url, {
+        headers: new Headers(req.headers),
+        method: req.method,
+        body: req.body,
+        cache: req.cache,
+        credentials: req.credentials,
+        integrity: req.integrity,
+        keepalive: req.keepalive,
+        mode: req.mode,
+        redirect: req.redirect,
+        referrer: req.referrer,
+        referrerPolicy: req.referrerPolicy,
+        signal: req.signal,
+      });
+      reqWithId.headers.set('X-Request-ID', requestId);
+      
+      // Call the handler with the modified request
+      const response = await handler(reqWithId);
       
       // Add request ID to response headers
       if (response instanceof NextResponse) {

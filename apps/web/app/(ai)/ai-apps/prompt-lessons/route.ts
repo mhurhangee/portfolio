@@ -9,10 +9,11 @@ import { getUserInfo } from '@/app/(ai)/lib/user-identification';
 
 export const runtime = 'edge';
 
-async function handler(req: NextRequest, requestId: string) {
+async function handler(req: NextRequest) {
   try {
     // Get user information from request
     const { userId, ip, userAgent } = await getUserInfo(req);
+    const requestId = req.headers.get('X-Request-ID') || 'unknown';
     
     // Create request context for logging
     const requestContext = {

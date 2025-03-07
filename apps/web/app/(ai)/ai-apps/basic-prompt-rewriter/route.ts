@@ -12,10 +12,13 @@ export const runtime = 'edge'
 export const maxDuration = 60
 
 // Handler function with request ID tracking
-async function handler(req: NextRequest, requestId: string) {
+async function handler(req: NextRequest) {
   try {
     // Get request information for context
     const { userId, ip, userAgent } = await getUserInfo(req)
+    
+    const requestId = req.headers.get('X-Request-ID') || 'unknown';
+
     const requestContext = {
       path: req.nextUrl.pathname,
       method: req.method,
