@@ -2,7 +2,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "./logger";
-import { withLogtail } from '@logtail/next';
 import { v4 as uuidv4 } from 'uuid';
 
 // Standard error codes
@@ -29,10 +28,12 @@ export interface ApiError {
 }
 
 /**
- * Creates a wrapped API handler with Logtail integration and request ID tracking
+ * Creates a wrapped API handler with request ID tracking
+ * Compatible with Next.js App Router
  */
 export function createApiHandler(handler: (req: NextRequest) => Promise<Response>) {
-  return withLogtail(async (req: NextRequest) => {
+  // Return a function that matches the Next.js App Router handler signature
+  return async function(req: NextRequest) {
     // Generate a unique request ID
     const requestId = uuidv4();
     
@@ -86,7 +87,7 @@ export function createApiHandler(handler: (req: NextRequest) => Promise<Response
         requestId
       });
     }
-  });
+  };
 }
 
 /**
@@ -111,53 +112,37 @@ export function handleApiError(
       // Try to parse as a structured error
       const parsedError = JSON.parse(error.message) as Partial<ApiError>;
       if (parsedError.code && parsedError.message) {
+        // Explicitly set all required properties to ensure type safety
         apiError = {
-          ...parsedError,
+          code: parsedError.code,
+          message: parsedError.message,
           requestId: context.requestId,
           severity: parsedError.severity || "error",
           details: parsedError.details || {}
-        } as ApiError;
+        };
       } else {
+        // Not a structured error, use the message
         apiError.message = error.message;
-        apiError.details = { stack: error.stack };
       }
     } catch {
+      // Not a JSON string, use the message directly
       apiError.message = error.message;
-      apiError.details = { stack: error.stack };
     }
-  } else if (typeof error === "string") {
+  } else if (typeof error === 'string') {
     apiError.message = error;
-  } else if (error && typeof error === "object") {
-    const errorObj = error as Record<string, any>;
-    apiError.message = errorObj.message || apiError.message;
-    apiError.code = errorObj.code || apiError.code;
-    apiError.details = { ...apiError.details, ...errorObj };
   }
 
-  // Log the error
-  logger.error(`API Error: ${apiError.code}`, {
+  // Log the error with context
+  logger.error(`API error: ${apiError.code}`, {
     ...context,
-    errorMessage: apiError.message,
-    errorDetails: apiError.details
+    ...apiError
   });
 
-  // Map severity to HTTP status code
-  const statusCode = (() => {
-    switch (apiError.code) {
-      case "rate_limit_exceeded": return 429;
-      case "unauthorized": return 401;
-      case "not_found": return 404;
-      case "validation_error":
-      case "bad_request": return 400;
-      default: return apiError.severity === "error" ? 500 : 400;
-    }
-  })();
-
-  // Create response with request ID header
-  const response = NextResponse.json(apiError, { status: statusCode });
-  response.headers.set('X-Request-ID', context.requestId);
-  
-  return response;
+  // Return a structured error response
+  return NextResponse.json(
+    { error: apiError },
+    { status: getStatusCodeForError(apiError.code) }
+  );
 }
 
 /**
@@ -169,12 +154,37 @@ export function createApiError(
   severity: ErrorSeverity = "error",
   details?: Record<string, any>
 ): Error {
-  const error: Omit<ApiError, 'requestId'> = {
-    code,
-    message,
-    severity,
-    details
-  };
+  const error = new Error(
+    JSON.stringify({
+      code,
+      message,
+      severity,
+      details
+    })
+  );
   
-  return new Error(JSON.stringify(error));
+  // Add a flag to identify this as an API error
+  (error as any).isApiError = true;
+  
+  return error;
+}
+
+/**
+ * Map error codes to HTTP status codes
+ */
+function getStatusCodeForError(code: ErrorCode): number {
+  switch (code) {
+    case "rate_limit_exceeded":
+      return 429;
+    case "moderation_flagged":
+    case "validation_error":
+    case "bad_request":
+      return 400;
+    case "unauthorized":
+      return 401;
+    case "not_found":
+      return 404;
+    default:
+      return 500;
+  }
 }
