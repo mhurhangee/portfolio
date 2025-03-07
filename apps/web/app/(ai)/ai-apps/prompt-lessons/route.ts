@@ -1,201 +1,204 @@
-// File: /home/mjh/front/apps/web/app/(ai)/ai-apps/prompt-lessons/route.ts
-
 import { NextRequest } from 'next/server';
 
-//import { runPreflightChecks } from '@/app/(ai)/lib/preflight-checks/preflight-checks';
-//import { handlePreflightError } from '@/app/(ai)/lib/preflight-checks/error-handler';
-//import { getUserInfo } from '../../lib/user-identification';
 import { generateLessonWithRetries } from './server/generateLesson';
-import { generateExercisesForLesson } from './server/generateExercise';
+import { generateExercise } from './server/generateExercise';
 import { generateEvaluation, generateConstructionEvaluation } from './server/generateEvaluation';
+import { createApiHandler, createApiError } from '@/app/(ai)/lib/error-handling/api-error-handler';
+import { logger } from '@/app/(ai)/lib/error-handling/logger';
+import { getUserInfo } from '@/app/(ai)/lib/user-identification';
 
 export const runtime = 'edge';
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest, requestId: string) {
   try {
-    // Extract the request data
+    // Get user information from request
+    const { userId, ip, userAgent } = await getUserInfo(req);
+    
+    // Create request context for logging
+    const requestContext = {
+      path: req.nextUrl.pathname,
+      method: req.method,
+      userId,
+      ip,
+      userAgent,
+      requestId
+    };
+    
+    // Log the start of request processing
+    logger.info('Starting prompt lessons request processing', requestContext);
+    
+    // Parse the request body
     const requestData = await req.json();
-    console.log("Received request:", requestData);
+    const { action, lessonId, exercisePrompt, original, improvement, criteria, sampleImprovement, task, scenario, construction, sampleSolution } = requestData;
     
-    // Input validation
-    if (!requestData || typeof requestData !== 'object') {
-      console.error('Error: Invalid request format', typeof requestData);
-      return Response.json(
-        { 
-          error: { 
-            code: 'invalid_request', 
-            message: 'Missing or invalid request parameters', 
-            severity: 'error' 
-          } 
-        },
-        { status: 400 }
-      );
-    }
-    console.log('Input validation passed');
-
-    // Get user information from request including ID, IP, and user agent
-    //const { userId, ip, userAgent } = await getUserInfo(req);
+    // Log the incoming request with details
+    logger.info('Processing prompt lessons request', {
+      ...requestContext,
+      action,
+      lessonId,
+      hasExercisePrompt: !!exercisePrompt
+    });
     
-    // Handle different request types
-    const { 
-      action, 
-      lessonId, 
-      exercisePrompt, 
-      criteria, 
-      improvement, 
-      original, 
-      sampleImprovement,
-      task,
-      scenario,
-      construction,
-      sampleSolution
-    } = requestData;
-    
+    // Validate the action
     if (!action) {
-      return Response.json(
-        { 
-          error: { 
-            code: 'invalid_request', 
-            message: 'Action parameter is required', 
-            severity: 'error' 
-          } 
-        },
-        { status: 400 }
+      logger.warn('Missing action parameter', requestContext);
+      throw createApiError(
+        'validation_error',
+        'Action is required',
+        'error'
       );
     }
-    console.log('Action validation passed', action);
     
-    /*
-    // Run preflight checks with content from request
-    const preflightContent = action === 'submitExercise' ? userAnswer : '';
-    const preflightResult = await runPreflightChecks(userId, preflightContent, ip, userAgent);
-    
-    // If preflight checks fail, return the error
-    if (!preflightResult.passed && preflightResult.result) {
-      const errorResponse = handlePreflightError(preflightResult.result);
-      return Response.json(errorResponse, { status: 400 });
-    }
-
-    console.log("Preflight checks passed, processing request...");
-    */
-
-    // Process based on action type
     if (action === 'getLesson') {
+      // Validate lessonId
       if (!lessonId) {
-        console.log('Lesson ID is required');
-        return Response.json(
-          { 
-            error: { 
-              code: 'invalid_request', 
-              message: 'Lesson ID is required', 
-              severity: 'error' 
-            } 
-          },
-          { status: 400 }
+        logger.warn('Missing lessonId parameter for getLesson action', requestContext);
+        throw createApiError(
+          'validation_error',
+          'Lesson ID is required',
+          'error'
         );
       }
-      console.log('Lesson ID validation passed', lessonId);
       
-      // Generate lesson content with retries and validation
+      logger.info('Generating lesson content', {
+        ...requestContext,
+        lessonId
+      });
+      
       try {
         const lessonData = await generateLessonWithRetries(lessonId);
+        
+        logger.info('Successfully generated lesson content', {
+          ...requestContext,
+          lessonId,
+          status: 'completed'
+        });
+        
         return Response.json(lessonData);
       } catch (error: any) {
-        console.error('Error generating lesson:', error);
-        return Response.json(
-          { 
-            error: { 
-              code: 'generation_failed', 
-              message: error.message || 'Failed to generate lesson content', 
-              severity: 'error',
-              details: error.stack || error.toString()
-            } 
-          },
-          { status: 500 }
+        logger.error('Error generating lesson content', {
+          ...requestContext,
+          lessonId,
+          error: error.message
+        });
+        
+        throw createApiError(
+          'lesson_generation_failed',
+          error.message || 'Failed to generate lesson content',
+          'error',
+          { lessonId }
         );
       }
     }
     else if (action === 'generateExercises') {
-      // Input validation
+      // Input validation for exercise generation
       if (!exercisePrompt) {
-        return Response.json(
-          { error: { code: 'invalid_request', message: 'Exercise prompt is required', severity: 'error' } },
-          { status: 400 }
+        logger.warn('Missing exercisePrompt parameter for generateExercises action', requestContext);
+        throw createApiError(
+          'validation_error',
+          'Exercise prompt is required',
+          'error'
         );
       }
       
+      logger.info('Generating exercises', {
+        ...requestContext,
+        promptLength: exercisePrompt.length
+      });
+      
       try {
-        const exercisesData = await generateExercisesForLesson(exercisePrompt);
-        console.log("Generated exercises:", JSON.stringify(exercisesData));
+        const exerciseData = await generateExercise(exercisePrompt);
         
-        // Make sure we have exercises before returning
-        if (!exercisesData || !exercisesData.exercises || exercisesData.exercises.length === 0) {
-          throw new Error("No exercises were generated");
-        }
+        logger.info('Successfully generated exercises', {
+          ...requestContext,
+          exerciseCount: exerciseData.exercises?.length || 0,
+          status: 'completed'
+        });
         
-        return Response.json(exercisesData);
+        return Response.json(exerciseData);
       } catch (error: any) {
-        console.error('Error generating exercises:', error);
-        return Response.json(
-          { 
-            error: { 
-              code: 'exercise_generation_failed', 
-              message: error.message || 'Failed to generate exercises', 
-              severity: 'error',
-              details: error.stack || error.toString()
-            } 
-          },
-          { status: 500 }
+        logger.error('Error generating exercises', {
+          ...requestContext,
+          error: error.message
+        });
+        
+        throw createApiError(
+          'exercise_generation_failed',
+          error.message || 'Failed to generate exercises',
+          'error'
         );
       }
     }
     else if (action === 'evaluateImprovement') {
       // Input validation for improvement evaluation
       if (!original || !improvement || !criteria) {
-        return Response.json(
-          { 
-            error: { 
-              code: 'invalid_request', 
-              message: 'Original prompt, improvement, and criteria are required', 
-              severity: 'error' 
-            } 
-          },
-          { status: 400 }
+        logger.warn('Missing parameters for evaluateImprovement action', {
+          ...requestContext,
+          hasOriginal: !!original,
+          hasImprovement: !!improvement,
+          hasCriteria: !!criteria
+        });
+        
+        throw createApiError(
+          'validation_error',
+          'Original prompt, improvement, and criteria are required',
+          'error'
         );
       }
       
+      logger.info('Evaluating improvement', {
+        ...requestContext,
+        originalLength: original.length,
+        improvementLength: improvement.length
+      });
+      
       try {
         const evaluationData = await generateEvaluation(original, improvement, sampleImprovement, criteria);
+        
+        logger.info('Successfully evaluated improvement', {
+          ...requestContext,
+          isGoodImprovement: evaluationData.isGoodImprovement,
+          status: 'completed'
+        });
+        
         return Response.json(evaluationData);
       } catch (error: any) {
-        console.error('Error evaluating improvement:', error);
-        return Response.json(
-          { 
-            error: { 
-              code: 'evaluation_failed', 
-              message: error.message || 'Failed to evaluate improvement', 
-              severity: 'error',
-              details: error.stack || error.toString()
-            } 
-          },
-          { status: 500 }
+        logger.error('Error evaluating improvement', {
+          ...requestContext,
+          error: error.message
+        });
+        
+        throw createApiError(
+          'evaluation_failed',
+          error.message || 'Failed to evaluate improvement',
+          'error'
         );
       }
     }
     else if (action === 'evaluateConstruction') {
       // Input validation for construction evaluation
       if (!task || !scenario || !construction || !criteria) {
-        return Response.json(
-          { 
-            error: { 
-              code: 'invalid_request', 
-              message: 'Task, scenario, constructed prompt, and criteria are required', 
-              severity: 'error' 
-            } 
-          },
-          { status: 400 }
+        logger.warn('Missing parameters for evaluateConstruction action', {
+          ...requestContext,
+          hasTask: !!task,
+          hasScenario: !!scenario,
+          hasConstruction: !!construction,
+          hasCriteria: !!criteria
+        });
+        
+        throw createApiError(
+          'validation_error',
+          'Task, scenario, constructed prompt, and criteria are required',
+          'error'
         );
       }
+      
+      logger.info('Evaluating construction', {
+        ...requestContext,
+        taskLength: task.length,
+        scenarioLength: scenario.length,
+        constructionLength: construction.length
+      });
       
       try {
         // Ensure criteria is an array
@@ -208,47 +211,44 @@ export async function POST(req: NextRequest) {
           criteriaArray, 
           sampleSolution
         );
+        
+        logger.info('Successfully evaluated construction', {
+          ...requestContext,
+          isGoodConstruction: evaluationData.isGoodImprovement,
+          status: 'completed'
+        });
+        
         return Response.json(evaluationData);
       } catch (error: any) {
-        console.error('Error evaluating construction:', error);
-        return Response.json(
-          { 
-            error: { 
-              code: 'evaluation_failed', 
-              message: error.message || 'Failed to evaluate constructed prompt', 
-              severity: 'error',
-              details: error.stack || error.toString()
-            } 
-          },
-          { status: 500 }
+        logger.error('Error evaluating construction', {
+          ...requestContext,
+          error: error.message
+        });
+        
+        throw createApiError(
+          'evaluation_failed',
+          error.message || 'Failed to evaluate constructed prompt',
+          'error'
         );
       }
     }
     else {
-      return Response.json(
-        { 
-          error: { 
-            code: 'invalid_request', 
-            message: `Unknown action: ${action}`, 
-            severity: 'error' 
-          } 
-        },
-        { status: 400 }
+      logger.warn('Unknown action requested', {
+        ...requestContext,
+        action
+      });
+      
+      throw createApiError(
+        'invalid_request',
+        `Unknown action: ${action}`,
+        'error'
       );
     }
-    
-  } catch (error: any) {
-    console.error('Error in prompt lessons API:', error);
-    
-    return Response.json(
-      { 
-        error: { 
-          code: 'api_error', 
-          message: error.message || 'An error occurred while processing your request', 
-          severity: 'error' 
-        } 
-      },
-      { status: 500 }
-    );
+  } catch (error) {
+    // Error will be handled by the createApiHandler wrapper
+    throw error;
   }
 }
+
+// Export the wrapped handler with automatic log flushing and error handling
+export const POST = createApiHandler(handler);

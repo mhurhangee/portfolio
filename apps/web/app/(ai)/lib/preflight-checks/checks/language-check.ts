@@ -1,4 +1,4 @@
-import { PreflightCheck } from '../types';
+import { PreflightCheck, PreflightParams } from '../types';
 import { francAll } from 'franc';
 import englishWords from 'an-array-of-english-words';
 
@@ -15,9 +15,44 @@ const COMMON_ENGLISH_PATTERNS = [
 export const languageCheck: PreflightCheck = {
   name: 'language_check',
   description: 'Checks if the input is in English language',
-  run: async ({ lastMessage }) => {
+  tier: 1,
+  enabled: true,
+  configurable: true,
+  defaultConfig: {
+    // Minimum confidence for language detection
+    minConfidence: 0.5,
+    // Minimum percentage of English words required
+    minEnglishPercentage: 30,
+    // Whether to allow code snippets (which may contain non-English words)
+    allowCodeSnippets: true,
+    // Additional allowed languages besides English
+    additionalAllowedLanguages: [] // e.g., ['fra', 'deu', 'spa']
+  },
+  run: async ({ lastMessage, checkConfig, logger }: PreflightParams) => {
     try {
+      // Get configuration, using defaults if not provided
+      const config = {
+        minConfidence: checkConfig?.minConfidence ?? 0.5,
+        minEnglishPercentage: checkConfig?.minEnglishPercentage ?? 30,
+        allowCodeSnippets: checkConfig?.allowCodeSnippets ?? true,
+        additionalAllowedLanguages: checkConfig?.additionalAllowedLanguages ?? []
+      };
+      
+      // Log the configuration being used
+      if (logger) {
+        logger.debug('Running language check', {
+          checkName: 'language_check',
+          minConfidence: config.minConfidence,
+          minEnglishPercentage: config.minEnglishPercentage,
+          allowCodeSnippets: config.allowCodeSnippets,
+          additionalAllowedLanguages: config.additionalAllowedLanguages
+        });
+      }
+      
       if (!lastMessage || lastMessage.trim().length === 0) {
+        if (logger) {
+          logger.debug('Language check: No content to check');
+        }
         return {
           passed: true,
           code: 'language_check_skipped',
@@ -29,6 +64,9 @@ export const languageCheck: PreflightCheck = {
       // Check for common English patterns first (quick win)
       for (const pattern of COMMON_ENGLISH_PATTERNS) {
         if (pattern.test(lastMessage)) {
+          if (logger) {
+            logger.debug('Language check: Common English pattern detected');
+          }
           return {
             passed: true,
             code: 'language_check_pattern_match',
@@ -42,6 +80,9 @@ export const languageCheck: PreflightCheck = {
       
       // Be more lenient with short inputs (1-5 words)
       if (words.length <= 5) {
+        if (logger) {
+          logger.debug('Language check: Input too short for reliable detection');
+        }
         return { 
           passed: true, 
           code: 'language_check_short_input',
@@ -49,55 +90,102 @@ export const languageCheck: PreflightCheck = {
           severity: 'info'
         };
       }
-
-      // For longer texts, use francAll
-      const langOptions = francAll(lastMessage);
-      const topLangs = langOptions.slice(0, 2);
       
-      // Consider 'eng' (English), 'sco' (Scots), or 'und' (undetermined) as valid
-      const validLangs = ['eng', 'sco', 'und'];
-      
-      // Check if any of the top 2 detected languages are in our valid list
-      if (topLangs.some(lang => validLangs.includes(lang[0]))) {
-        return {
-          passed: true,
-          code: 'language_check_valid_lang',
-          message: 'Valid language detected',
-          severity: 'info' 
-        };
+      // Check for code snippets
+      if (config.allowCodeSnippets) {
+        const codePatterns = [
+          /```[\s\S]*?```/g, // Markdown code blocks
+          /<[a-z]+[^>]*>[\s\S]*?<\/[a-z]+>/g, // HTML tags
+          /function\s+\w+\s*\([^)]*\)\s*{/g, // JavaScript functions
+          /const|let|var\s+\w+\s*=/g, // JavaScript variable declarations
+          /import\s+.*?from\s+['"].*?['"]/g, // JavaScript imports
+          /class\s+\w+(\s+extends\s+\w+)?(\s+implements\s+\w+)?\s*{/g, // Class definitions
+        ];
+        
+        for (const pattern of codePatterns) {
+          if (pattern.test(lastMessage)) {
+            if (logger) {
+              logger.debug('Language check: Code snippet detected, skipping strict language check');
+            }
+            return {
+              passed: true,
+              code: 'language_check_code_detected',
+              message: 'Code snippet detected, skipping strict language check',
+              severity: 'info'
+            };
+          }
+        }
       }
       
-      // If not clearly English, check for a significant presence of English words
+      // Count English words
       const englishWordCount = words.filter(word => commonEnglishWords.has(word)).length;
+      const englishPercentage = (englishWordCount / words.length) * 100;
       
-      if (englishWordCount / words.length >= 0.3) { // 30% threshold
+      // Use franc for language detection
+      const langDetectionResult = francAll(lastMessage);
+      
+      // Check if the top result is English or one of the additional allowed languages
+      const allowedLanguages = ['eng', ...config.additionalAllowedLanguages];
+      const topResult = langDetectionResult[0] || ['unknown', 0];
+      
+      if (logger) {
+        logger.debug('Language check: Detection results', {
+          topLanguage: topResult[0],
+          confidence: topResult[1],
+          englishPercentage,
+          englishWordCount,
+          totalWords: words.length,
+          allowedLanguages
+        });
+      }
+      
+      // Pass if either:
+      // 1. Top language is in allowed languages with sufficient confidence, OR
+      // 2. English word percentage is high enough
+      if (
+        (allowedLanguages.includes(topResult[0]) && topResult[1] >= config.minConfidence) ||
+        englishPercentage >= config.minEnglishPercentage
+      ) {
         return {
           passed: true,
-          code: 'language_check_english_words',
-          message: 'Sufficient English words detected',
+          code: 'language_check_passed',
+          message: 'Input language is acceptable',
+          details: {
+            detectedLanguage: topResult[0],
+            confidence: topResult[1],
+            englishPercentage
+          },
           severity: 'info'
         };
       }
-
-      // If still not detected as English, fail the check
+      
+      // If we get here, the language check failed
       return {
         passed: false,
-        code: 'non_english_language',
-        message: 'Only English language is supported',
+        code: 'non_english_input',
+        message: 'Input must be in English',
         details: {
-          detectedLanguage: topLangs[0]?.[0] || 'unknown',
-          confidence: topLangs[0]?.[1] || 0
+          detectedLanguage: topResult[0],
+          confidence: topResult[1],
+          englishPercentage
         },
-        severity: 'error'
+        severity: 'info'
       };
     } catch (error) {
-      console.error('Language check error:', error);
+      // Log the error
+      if (logger) {
+        logger.error('Error in language check', {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
+      }
       
-      // In case of error, allow the content through
+      // If there's an error, we'll pass the check to avoid blocking users
       return {
         passed: true,
         code: 'language_check_error',
-        message: 'Error in language detection, proceeding with caution',
+        message: 'Error during language detection, allowing request',
+        details: { error: error instanceof Error ? error.message : String(error) },
         severity: 'warning'
       };
     }

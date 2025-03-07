@@ -15,6 +15,8 @@ import { lessons, getAllLessons } from "./lessons/lesson-data"
 import { Lesson, LessonContent } from "./schema"
 import LessonBrowser from "./components/lesson-browser"
 import LessonContentView from "./components/lesson-content"
+import { useErrorHandler } from "@/app/(ai)/lib/error-handling/client-error-handler"
+import { toastSuccess } from "@/app/(ai)/lib/error-handling/toast-manager"
 
 export default function PromptLessonsTool() {
     const [activeTab, setActiveTab] = useState("browse")
@@ -47,9 +49,13 @@ export default function PromptLessonsTool() {
         return () => clearTimeout(scrollTimer);
     }, [activeTab, lessonContent]);
 
+    // Use the standardized error handler
+    const { handleError, clearError } = useErrorHandler("PromptLessonsTool")
+
     // Function to handle lesson selection and fetch lesson content
     const handleSelectLesson = async (lesson: Lesson) => {
         try {
+            clearError()
             // Preflight check: Ensure we have a valid lesson object
             if (!lesson || typeof lesson !== 'object') {
                 throw new Error("Invalid lesson provided");
@@ -60,67 +66,56 @@ export default function PromptLessonsTool() {
                 throw new Error("Invalid lesson ID");
             }
 
-
             setSelectedLesson(lesson)
             setLessonContent(undefined)
             setError(null)
             setIsLoading(true)
             setActiveTab("lesson")
 
+            const response = await fetch('/api/ai/prompt-lessons', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'getLesson',
+                    lessonId: lesson.id
+                }),
+            });
 
-            try {
-                const response = await fetch('/api/ai/prompt-lessons', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'getLesson',
-                        lessonId: lesson.id
-                    }),
-                });
-
-                if (!response.ok) {
-                    console.log(response)
-                    const errorData = await response.json();
-                    throw new Error(errorData.error?.message || `Failed to fetch lesson content (${response.status})`);
-                }
-
-                const data = await response.json();
-                console.log("API response:", data);
-
-                // Check if the API returned an error
-                if (data.error) {
-                    throw new Error(data.error.message || 'An unknown error occurred');
-                }
-
-                // Ensure content exists in the response
-                if (!data.content) {
-                    throw new Error('API response missing lesson content');
-                }
-
-                setLessonContent(data.content);
-                setIsLoading(false);
-
-            } catch (apiError: any) {
-                console.error("API error:", apiError);
-                setError({
-                    code: 'api_error',
-                    message: apiError.message || 'Failed to generate lesson content',
-                    severity: 'error'
-                });
-                setIsLoading(false);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || `Failed to fetch lesson content (${response.status})`);
             }
 
-        } catch (err: any) {
-            console.error("Failed to load lesson:", err)
+            const data = await response.json();
+            console.log("API response:", data);
+
+            // Check if the API returned an error
+            if (data.error) {
+                throw new Error(data.error.message || 'An unknown error occurred');
+            }
+
+            // Ensure content exists in the response
+            if (!data.content) {
+                throw new Error('API response missing lesson content');
+            }
+
+            setLessonContent(data.content);
+            toastSuccess(`Loaded lesson: ${lesson.title}`)
+            setIsLoading(false);
+
+        } catch (apiError: any) {
+            console.error("API error:", apiError);
+            handleError(apiError)
             setError({
                 code: 'api_error',
-                message: err.message || 'An error occurred while loading the lesson',
+                message: apiError.message || 'Failed to generate lesson content',
                 severity: 'error'
-            })
-            setIsLoading(false)
+            });
+            setIsLoading(false);
         }
+
     }
 
     // Function to handle going back to the browse view
@@ -170,7 +165,7 @@ export default function PromptLessonsTool() {
                                 {errorConfig && <PreflightError config={errorConfig} />}
 
                                 <LessonBrowser
-                                    lessons={lessons}
+                                    lessons={currentLessons}
                                     selectedLesson={selectedLesson}
                                     onSelectLesson={handleSelectLesson}
                                 />

@@ -86,8 +86,11 @@ function containsPartialMatch(input: string, terms: string[]): string | null {
 }
 
 export const blacklistedKeywordsCheck: PreflightCheck = {
-  name: 'blacklisted_keywords',
+  name: 'content_moderation',
   description: 'Checks for blacklisted or prohibited keywords in the input',
+  tier: 1,
+  enabled: true,
+  configurable: false,
   run: async ({ lastMessage }) => {
     try {
       // Check if there's any content to check

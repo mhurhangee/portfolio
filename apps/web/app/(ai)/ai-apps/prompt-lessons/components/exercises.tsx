@@ -6,6 +6,8 @@ import ExerciseWrapper from "./exercises/exercise-wrapper"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Loader2 } from "lucide-react" 
 import { motion, AnimatePresence } from "framer-motion"
+import { useErrorHandler } from "@/app/(ai)/lib/error-handling/client-error-handler"
+import { toastSuccess } from "@/app/(ai)/lib/error-handling/toast-manager"
 
 interface ExercisesProps {
   exercisePrompt: string;
@@ -15,12 +17,12 @@ interface ExercisesProps {
 export default function Exercises({ exercisePrompt, topic }: ExercisesProps) {
   const [exercises, setExercises] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { error, handleError, clearError } = useErrorHandler("ExercisesComponent");
 
   // Generate exercises
   const handleGenerateExercises = async () => {
     setIsLoading(true);
-    setError(null);
+    clearError();
     
     try {
       const response = await fetch('/api/ai/prompt-lessons', {
@@ -36,20 +38,24 @@ export default function Exercises({ exercisePrompt, topic }: ExercisesProps) {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Failed to generate exercises');
+        throw new Error(JSON.stringify(errorData.error || { message: 'Failed to generate exercises' }));
       }
       
       const data = await response.json();
       
       // Ensure we have exercises
       if (!data || !Array.isArray(data.exercises) || data.exercises.length === 0) {
-        throw new Error('No exercises were generated');
+        throw new Error(JSON.stringify({
+          code: 'no_exercises_generated',
+          message: 'No exercises were generated',
+          severity: 'error'
+        }));
       }
       
       setExercises(data.exercises);
-    } catch (err: any) {
-      console.error('Error generating exercises:', err);
-      setError(err.message || 'Failed to generate exercises');
+      toastSuccess(`Generated ${data.exercises.length} exercises for ${topic}`);
+    } catch (err) {
+      handleError(err);
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +89,7 @@ export default function Exercises({ exercisePrompt, topic }: ExercisesProps) {
       
       {error && (
         <div className="p-3 text-sm border border-red-200 bg-red-50 text-red-700 rounded-md dark:bg-red-950/30 dark:border-red-900 dark:text-red-400">
-          {error}
+          {error.message}
         </div>
       )}
       

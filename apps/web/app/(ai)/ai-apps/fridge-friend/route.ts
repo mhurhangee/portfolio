@@ -3,82 +3,125 @@ import { generateObject } from 'ai';
 import { APP_CONFIG } from './config';
 import { recipeSuggestionsSchema, recipeSchema } from './schema';
 import { runPreflightChecks } from '@/app/(ai)/lib/preflight-checks/preflight-checks';
-import { handlePreflightError } from '@/app/(ai)/lib/preflight-checks/error-handler';
 import { getUserInfo } from '../../lib/user-identification';
+import { createApiHandler, createApiError } from '@/app/(ai)/lib/error-handling/api-error-handler';
+import { logger } from '@/app/(ai)/lib/error-handling/logger';
 import { z } from 'zod';
 
 export const runtime = 'edge';
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest, requestId: string) {
   try {
+    // Get user information from request including ID, IP, and user agent
+    const { userId, ip, userAgent } = await getUserInfo(req);
+    
+    // Create request context for logging
+    const requestContext = {
+      path: req.nextUrl.pathname,
+      method: req.method,
+      userId,
+      ip,
+      userAgent,
+      requestId
+    };
+    
+    // Log the start of request processing
+    logger.info('Starting fridge friend request processing', requestContext);
+    
     // Extract request data
     const { ingredients, mode, action, recipeId } = await req.json();
     
+    // Log the incoming request with details
+    logger.info('Processing fridge friend request', {
+      ...requestContext,
+      action,
+      mode,
+      ingredientCount: ingredients?.length,
+      recipeId: recipeId || 'none'
+    });
+    
     // Input validation
     if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
-      return Response.json(
-        { 
-          error: { 
-            code: 'invalid_request', 
-            message: 'Missing or invalid ingredients parameter', 
-            severity: 'error' 
-          } 
-        },
-        { status: 400 }
+      logger.warn('Invalid ingredients parameter', {
+        ...requestContext,
+        ingredientsType: typeof ingredients,
+        isArray: Array.isArray(ingredients),
+        count: ingredients?.length
+      });
+      
+      throw createApiError(
+        'validation_error',
+        'Missing or invalid ingredients parameter',
+        'error',
+        { ingredientsType: typeof ingredients }
       );
     }
 
     if (!mode || !['strict', 'flexible', 'staples'].includes(mode)) {
-      return Response.json(
-        { 
-          error: { 
-            code: 'invalid_request', 
-            message: 'Invalid mode parameter', 
-            severity: 'error' 
-          } 
-        },
-        { status: 400 }
+      logger.warn('Invalid mode parameter', {
+        ...requestContext,
+        providedMode: mode
+      });
+      
+      throw createApiError(
+        'validation_error',
+        'Invalid mode parameter',
+        'error',
+        { providedMode: mode }
       );
     }
 
     if (!action || !['suggest', 'detail'].includes(action)) {
-      return Response.json(
-        { 
-          error: { 
-            code: 'invalid_request', 
-            message: 'Invalid action parameter', 
-            severity: 'error' 
-          } 
-        },
-        { status: 400 }
+      logger.warn('Invalid action parameter', {
+        ...requestContext,
+        providedAction: action
+      });
+      
+      throw createApiError(
+        'validation_error',
+        'Invalid action parameter',
+        'error',
+        { providedAction: action }
       );
     }
 
     if (action === 'detail' && !recipeId) {
-      console.log('Missing recipe ID');
-      return Response.json(
-        { 
-          error: { 
-            code: 'invalid_request', 
-            message: 'Recipe ID is required for detailed view', 
-            severity: 'error' 
-          } 
-        },
-        { status: 400 }
+      logger.warn('Missing recipe ID for detail action', requestContext);
+      
+      throw createApiError(
+        'validation_error',
+        'Recipe ID is required for detailed view',
+        'error'
       );
     }
 
-    // Get user information from request including ID, IP, and user agent
-    const { userId, ip, userAgent } = await getUserInfo(req);
+    // Run preflight checks
+    logger.debug('Running preflight checks', requestContext);
     
     // Run preflight checks with full user context
     const ingredientsText = ingredients.join(', ');
     const preflightResult = await runPreflightChecks(userId, `Please make a recipe out of the following ingredients: ${ingredientsText}`, ip, userAgent);
     
-    // If preflight checks fail, return the error
+    // Log the results of preflight checks
+    logger.info('Preflight check results', {
+      ...requestContext,
+      passed: preflightResult.passed,
+      failedCheck: preflightResult.failedCheck,
+      executionTimeMs: preflightResult.executionTimeMs
+    });
+    
+    // If preflight checks fail, throw a structured error
     if (!preflightResult.passed && preflightResult.result) {
-      const errorResponse = handlePreflightError(preflightResult.result);
-      return Response.json(errorResponse, { status: 400 });
+      const { code, message, severity, details } = preflightResult.result;
+      
+      logger.warn(`Preflight check failed: ${code}`, {
+        ...requestContext,
+        message,
+        severity,
+        details
+      });
+      
+      throw createApiError(code, message, severity, details);
     }
 
     // Construct the prompt based on the mode and action
@@ -97,11 +140,16 @@ Mode: ${mode === 'strict' ? 'Strict Mode - ONLY use the ingredients listed' :
        mode === 'flexible' ? 'Flexible Mode - Primarily use the ingredients listed, but you may suggest 1-2 additional items' :
        'Pantry Staples Assumed - You may include basic ingredients like salt, pepper, oil, and common spices'}
 
-Include detailed instructions, ingredient amounts, preparation time, and cooking tips.`;;
+Include detailed instructions, ingredient amounts, preparation time, and cooking tips.`;
     }
     
     if (action === 'suggest') {
       try {
+        logger.info('Performing ingredient safety check', {
+          ...requestContext,
+          ingredients: ingredientsText
+        });
+        
         // Simple ingredient validation check with a very clear schema
         const ingredientCheck = await generateObject({
           model: APP_CONFIG.model,
@@ -117,26 +165,50 @@ Include detailed instructions, ingredient amounts, preparation time, and cooking
           maxTokens: 100, // Small token limit since we only need a boolean
         });
     
-        console.log('Ingredient check result:', ingredientCheck.object);
+        logger.info('Ingredient check result', {
+          ...requestContext,
+          safeAndEthical: ingredientCheck.object.safeAndEthical
+        });
     
         if (!ingredientCheck.object.safeAndEthical) {
-          return Response.json(
-            { 
-              error: { 
-                code: 'invalid_ingredients', 
-                message: 'One or more ingredients may not be suitable for recipes. Please check your ingredients and try again.', 
-                severity: 'error' 
-              } 
-            },
-            { status: 400 }
+          logger.warn('Unsafe or unethical ingredients detected', {
+            ...requestContext,
+            ingredients: ingredientsText
+          });
+          
+          throw createApiError(
+            'invalid_ingredients',
+            'One or more ingredients may not be suitable for recipes. Please check your ingredients and try again.',
+            'error'
           );
         }
-      } catch (error) {
-        console.error('Error checking ingredients:', error);
-        // Continue with recipe generation even if ingredient check fails
-        console.log('Continuing with recipe generation despite ingredient check error');
+      } catch (error: any) {
+        // Only log the error if it's not already a structured API error
+        if (!error.isApiError) {
+          logger.error('Error checking ingredients', {
+            ...requestContext,
+            error: error.message
+          });
+        }
+        
+        // Re-throw API errors, but continue with recipe generation for other errors
+        if (error.isApiError) {
+          throw error;
+        }
+        
+        logger.info('Continuing with recipe generation despite ingredient check error', requestContext);
       }
     
+      // Log that we're calling the AI service for suggestions
+      logger.info('Calling AI service for recipe suggestions', {
+        ...requestContext,
+        model: APP_CONFIG.model,
+        mode,
+        ingredientCount: ingredients.length,
+        temperature: APP_CONFIG.temperature,
+        maxTokens: APP_CONFIG.maxTokens
+      });
+      
       // Proceed with recipe generation
       const result = await generateObject({
         model: APP_CONFIG.model,
@@ -146,8 +218,26 @@ Include detailed instructions, ingredient amounts, preparation time, and cooking
         temperature: APP_CONFIG.temperature,
         maxTokens: APP_CONFIG.maxTokens,
       });
+      
+      // Log successful completion
+      logger.info('Successfully generated recipe suggestions', {
+        ...requestContext,
+        status: 'completed',
+        suggestionCount: result.object.suggestions?.length || 0
+      });
+      
       return Response.json(result.object);
     } else if (action === 'detail') {
+      // Log that we're calling the AI service for recipe details
+      logger.info('Calling AI service for recipe details', {
+        ...requestContext,
+        model: APP_CONFIG.model,
+        mode,
+        recipeId,
+        temperature: APP_CONFIG.temperature,
+        maxTokens: APP_CONFIG.maxTokens
+      });
+      
       prompt += `\n\nYou must always return a valid JSON object.
       When generating a detailed recipe, ALWAYS include these exact fields:
 - title (string): The name of the recipe
@@ -169,21 +259,30 @@ Include detailed instructions, ingredient amounts, preparation time, and cooking
         temperature: APP_CONFIG.temperature,
         maxTokens: APP_CONFIG.maxTokens,
       });
+      
+      // Log successful completion
+      logger.info('Successfully generated recipe details', {
+        ...requestContext,
+        status: 'completed',
+        recipeId,
+        recipeTitle: result.object.title
+      });
+      
       return Response.json(result.object);
     }
     
-  } catch (error: any) {
-    console.error('Error in pantry challenge API:', error);
-    
-    return Response.json(
-      { 
-        error: { 
-          code: 'api_error', 
-          message: error.message || 'An error occurred while processing your request', 
-          severity: 'error' 
-        } 
-      },
-      { status: 500 }
+    // This should never happen due to action validation above
+    throw createApiError(
+      'internal_error',
+      'Invalid action state reached',
+      'error'
     );
+    
+  } catch (error) {
+    // Error will be handled by the createApiHandler wrapper
+    throw error;
   }
 }
+
+// Export the wrapped handler with automatic log flushing and error handling
+export const POST = createApiHandler(handler);

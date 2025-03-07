@@ -36,7 +36,7 @@ export async function analyzeContent(input: string): Promise<{
   };
 }> {
   const result = await generateObject({
-    model: groq('llama-3.1-8b-instant'), // You can use gpt-4o for even better results
+    model: groq('llama-3.1-8b-instant'),
     schema: z.object({
       jailbreak: z.object({
         isAttempt: z.boolean(),

@@ -1,16 +1,44 @@
-
 import { APP_CONFIG } from '../config';
 import { lessons } from '../lessons/lesson-data';
 import { validateSchema } from '../utils';
 import { lessonContentSchema } from '../schema';
 import { generateObject } from 'ai';
+import { createApiError } from '@/app/(ai)/lib/error-handling/api-error-handler';
+import { logger } from '@/app/(ai)/lib/error-handling/logger';
 
-export const generateLessonWithRetries = async (lessonId: string): Promise<any> => {
+export const generateLessonWithRetries = async (lessonId: string, requestId?: string): Promise<any> => {
+    const logContext = {
+      function: 'generateLessonWithRetries',
+      lessonId,
+      requestId
+    };
+    
+    // Log the start of lesson generation
+    logger.info('Starting lesson generation', logContext);
+    
     // Find the lesson in our data
     const lesson = lessons.find(l => l.id === lessonId);
     if (!lesson) {
-      throw new Error(`Lesson with ID "${lessonId}" not found`);
+      logger.warn('Lesson not found', {
+        ...logContext,
+        availableLessons: lessons.map(l => l.id).join(', ')
+      });
+      
+      throw createApiError(
+        'lesson_not_found',
+        `Lesson with ID "${lessonId}" not found`,
+        'error',
+        { lessonId }
+      );
     }
+    
+    logger.info('Found lesson, preparing prompt', {
+      ...logContext,
+      lessonTitle: lesson.title,
+      lessonTopic: lesson.topic,
+      difficulty: lesson.difficulty
+    });
+    
     const promptText = APP_CONFIG.systemPrompt +
       `
       # Task
@@ -22,12 +50,24 @@ export const generateLessonWithRetries = async (lessonId: string): Promise<any> 
       ` ;
     
     const maxRetries = APP_CONFIG.validationRetries || 1;
-
     let attempt = 0;
     let lastError = null;
     
+    logger.info('Starting generation attempts', {
+      ...logContext,
+      maxRetries,
+      model: APP_CONFIG.model,
+      temperature: APP_CONFIG.temperature
+    });
+    
     while (attempt < maxRetries) {
       attempt++;
+      
+      logger.info('Attempt to generate lesson content', {
+        ...logContext,
+        attempt,
+        maxRetries
+      });
       
       try {
         const result = await generateObject({
@@ -41,14 +81,29 @@ export const generateLessonWithRetries = async (lessonId: string): Promise<any> 
 
         if (!result || !result.object) {
           lastError = new Error('Empty generation result');
+          logger.warn('Empty generation result', {
+            ...logContext,
+            attempt
+          });
           continue;
         }
         
         const validation = validateSchema(lessonContentSchema, result.object);
         if (!validation.isValid) {
           lastError = new Error(`Validation failed: ${validation.errors.join(', ')}`);
+          logger.warn('Validation failed for generated content', {
+            ...logContext,
+            attempt,
+            errors: validation.errors
+          });
           continue;
         }
+        
+        logger.info('Successfully generated lesson content', {
+          ...logContext,
+          attempt,
+          status: 'success'
+        });
         
         return {
           lesson: lesson,
@@ -56,8 +111,24 @@ export const generateLessonWithRetries = async (lessonId: string): Promise<any> 
         };
       } catch (error: unknown) {
         lastError = error;
+        logger.error('Error during lesson generation', {
+          ...logContext,
+          attempt,
+          error: error instanceof Error ? error.message : String(error)
+        });
       }
     }
+    
+    logger.error('Failed to generate lesson content after multiple attempts', {
+      ...logContext,
+      attempts: attempt,
+      lastError: lastError instanceof Error ? lastError.message : String(lastError)
+    });
 
-    throw lastError || new Error('Failed to generate lesson content after multiple attempts');
+    throw createApiError(
+      'lesson_generation_failed',
+      lastError instanceof Error ? lastError.message : 'Failed to generate lesson content after multiple attempts',
+      'error',
+      { lessonId, attempts: attempt }
+    );
   };

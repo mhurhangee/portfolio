@@ -155,7 +155,10 @@ export default function IngredientInput({
           className="ml-auto"
         >
           {isLoading ? (
-            <>Finding recipes...</>
+            <div className="flex items-center">
+              <div className="animate-spin mr-2 h-4 w-4 border-b-2 border-primary rounded-full"></div>
+              Finding recipes...
+            </div>
           ) : (
             <>
               <Sparkles className="mr-2 h-4 w-4" />

@@ -15,11 +15,13 @@ import { type SummaryResponse} from "./schema"
 import React from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
 import ReactMarkdown from "react-markdown"
+import { useErrorHandler } from "@/app/(ai)/lib/error-handling/client-error-handler"
+import { toastSuccess } from "@/app/(ai)/lib/error-handling/toast-manager"
 
 export default function KeywordExtractorTool() {
     const [activeTab, setActiveTab] = useState("text")
     const [userPrompt, setUserPrompt] = useState("")
-    const [error, setError] = useState<any>(null)
+    const { error, handleError, clearError } = useErrorHandler("SummariserTool")
     const [summaryResponse, setSummaryResponse] = useState<SummaryResponse | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [isAborted, setIsAborted] = useState(false)
@@ -34,7 +36,7 @@ export default function KeywordExtractorTool() {
 
         try {
             // When submitting, clear previous errors and set loading state
-            setError(null)
+            clearError()
             setIsLoading(true)
             setIsAborted(false)
             
@@ -63,8 +65,8 @@ export default function KeywordExtractorTool() {
             }
             
             const data = await response.json()
-            console.log(data)
             setSummaryResponse(data)
+            toastSuccess("Summary generated successfully!")
             
         } catch (err: any) {
             
@@ -74,8 +76,8 @@ export default function KeywordExtractorTool() {
                 return
             }
             
-            setError({
-                code: 'api_error',
+            handleError({
+                code: err.code || 'api_error',
                 message: err.message || 'An error occurred during processing',
                 severity: 'error',
                 details: {}
@@ -97,7 +99,7 @@ export default function KeywordExtractorTool() {
     const handleReset = () => {
         setUserPrompt("")
         setActiveTab("text")
-        setError(null)
+        clearError()
         setSummaryResponse(null)
         setIsLoading(false)
         setIsAborted(false)
@@ -213,66 +215,57 @@ export default function KeywordExtractorTool() {
                         </TabsContent>
 
                         <TabsContent value="summary" className="m-0 space-y-0">
-                            {isLoading ? (
-                                <div className="p-6">
-                                    <div className="flex flex-col items-center justify-center space-y-4">
-                                        <div className="animate-pulse space-y-2">
-                                            <div className="h-4 bg-muted rounded w-3/4 mx-auto"></div>
-                                            <div className="h-4 bg-muted rounded w-1/2 mx-auto"></div>
-                                            <div className="h-4 bg-muted rounded w-5/6 mx-auto"></div>
-                                        </div>
-                                        <p className="text-muted-foreground">Generating summary...</p>
-                                        <Button 
-                                            variant="outline" 
-                                            size="sm" 
-                                            onClick={handleStop}
-                                        >
-                                            <StopCircle className="mr-2 h-4 w-4" />
+                            <CardContent className="p-6">
+                                {isLoading && (
+                                    <div className="flex flex-col items-center justify-center space-y-4 py-12">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                        <p className="text-sm text-muted-foreground">Generating your summary...</p>
+                                        <Button variant="outline" size="sm" onClick={handleStop}>
+                                            <StopCircle className="mr-2 h-4 w-4 text-destructive" />
                                             Stop Generation
                                         </Button>
                                     </div>
-                                </div>
-                            ) : isAborted ? (
-                                <div className="p-6 text-center text-muted-foreground">
-                                    <p>Summary generation was stopped. Submit a new text to continue.</p>
-                                </div>
-                            ) : !summaryResponse ? (
-                                <div className="p-6 text-center text-muted-foreground">
-                                    Submit a text to see generated summary here.
-                                </div>
-                            ) : (
-                                <div className="p-6 space-y-4">
-                                    <h3 className="text-lg font-medium flex items-center">
-                                        <CheckCircle2 className="mr-2 h-5 w-5 text-green-500" />
-                                        Generated Summary
-                                    </h3>
-                                    <div className="space-y-4">
-                                            <Card>
-                                                <CardHeader>
-                                                    <CardTitle>Your summary</CardTitle>
-                                                </CardHeader>
-                                                <CardContent>
-                                                    <div className="prose dark:prose-invert">
-                                                        <ReactMarkdown>{summaryResponse.summary}</ReactMarkdown>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
+                                )}
+
+                                {isAborted && (
+                                    <div className="flex flex-col items-center justify-center space-y-4 py-12">
+                                        <p className="text-sm text-muted-foreground">Generation stopped by user.</p>
+                                        <Button variant="outline" size="sm" onClick={() => setActiveTab("text")}>
+                                            Return to Input
+                                        </Button>
                                     </div>
-                                </div>
-                            )}
+                                )}
+
+                                {error && !isLoading && !isAborted && (
+                                    <div className="space-y-4">
+                                        <PreflightError config={errorConfig!} />
+                                        <Button variant="outline" size="sm" onClick={() => setActiveTab("text")}>
+                                            Return to Input
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {summaryResponse && !isLoading && !isAborted && !error && (
+                                    <div className="space-y-4">
+                                        <div className="rounded-md bg-muted p-4 prose prose-sm dark:prose-invert max-w-none">
+                                            <ReactMarkdown>
+                                                {summaryResponse.summary}
+                                            </ReactMarkdown>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
                         </TabsContent>
                     </Tabs>
 
-                    <CardFooter className="flex justify-between p-6 pt-0">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleReset}
-                            disabled={isLoading}
-                        >
+                    <CardFooter className="flex justify-between border-t p-6">
+                        <Button variant="outline" size="sm" onClick={handleReset} disabled={isLoading}>
                             <RotateCcw className="mr-2 h-4 w-4" />
-                            New Summary
+                            Reset
                         </Button>
+                        <p className="text-xs text-muted-foreground">
+                            Summaries help distill key information from longer texts.
+                        </p>
                     </CardFooter>
                 </Card>
             </motion.div>

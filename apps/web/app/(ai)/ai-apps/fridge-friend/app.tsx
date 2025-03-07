@@ -6,6 +6,8 @@ import { motion } from "framer-motion"
 import { Card, CardHeader, CardTitle, CardDescription } from "@workspace/ui/components/card"
 import { container, item } from "@/lib/animation"
 import { APP_CONFIG } from "./config"
+import { useErrorHandler } from "@/app/(ai)/lib/error-handling/client-error-handler"
+import { toastSuccess } from "@/app/(ai)/lib/error-handling/toast-manager"
 
 // Import components
 import IngredientInput from "./components/ingredient-input"
@@ -28,7 +30,7 @@ export default function FridgeFriendTool() {
   
   // UI state
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<any>(null)
+  const { error, handleError, clearError } = useErrorHandler("FridgeFriendTool")
   const [isAborted, setIsAborted] = useState(false)
   
   // Create a ref to store abort controller
@@ -48,7 +50,7 @@ export default function FridgeFriendTool() {
     setIngredients([])
     setMode('staples')
     setActiveView('ingredients')
-    setError(null)
+    clearError()
     setRecipeSuggestions([])
     setSelectedRecipe(null)
     setIsLoading(false)
@@ -66,7 +68,7 @@ export default function FridgeFriendTool() {
     if (ingredients.length === 0) return
 
     try {
-      setError(null)
+      clearError()
       setIsLoading(true)
       setIsAborted(false)
       
@@ -95,23 +97,22 @@ export default function FridgeFriendTool() {
       
       const data = await response.json()
       setRecipeSuggestions(data.suggestions)
+      toastSuccess("Recipe suggestions generated successfully!")
       
     } catch (err: any) {
-      console.error("Failed to get recipe suggestions:", err)
-      
-      if (err.name === 'AbortError') {
+      // Only handle error if it's not an abort error
+      if (err.name !== 'AbortError') {
+        handleError({
+          code: err.code || 'api_error',
+          message: err.message || 'An error occurred during processing',
+          severity: 'error',
+          details: {}
+        })
+        
+        setActiveView('ingredients')
+      } else {
         setIsAborted(true)
-        return
       }
-      
-      setError({
-        code: 'api_error',
-        message: err.message || 'An error occurred during processing',
-        severity: 'error',
-        details: {}
-      })
-      
-      setActiveView('ingredients')
     } finally {
       setIsLoading(false)
       abortControllerRef.current = null
@@ -121,7 +122,7 @@ export default function FridgeFriendTool() {
   // Handle getting detailed recipe
   const handleGetRecipe = async (recipeId: string) => {
     try {
-      setError(null)
+      clearError()
       setIsLoading(true)
       setIsAborted(false)
       
@@ -151,23 +152,22 @@ export default function FridgeFriendTool() {
       
       const data = await response.json()
       setSelectedRecipe(data)
+      toastSuccess("Recipe details generated successfully!")
       
     } catch (err: any) {
-      console.error("Failed to get recipe details:", err)
-      
-      if (err.name === 'AbortError') {
+      // Only handle error if it's not an abort error
+      if (err.name !== 'AbortError') {
+        handleError({
+          code: err.code || 'api_error',
+          message: err.message || 'An error occurred during processing',
+          severity: 'error',
+          details: {}
+        })
+        
+        setActiveView('suggestions')
+      } else {
         setIsAborted(true)
-        return
       }
-      
-      setError({
-        code: 'api_error',
-        message: err.message || 'An error occurred during processing',
-        severity: 'error',
-        details: {}
-      })
-      
-      setActiveView('suggestions')
     } finally {
       setIsLoading(false)
       abortControllerRef.current = null
@@ -208,7 +208,7 @@ export default function FridgeFriendTool() {
               setMode={setMode}
               isLoading={isLoading}
               error={error}
-              setError={setError}
+              setError={clearError}
               handleGetSuggestions={handleGetSuggestions}
             />
           )}

@@ -11,14 +11,15 @@ import { getErrorDisplay } from "@/app/(ai)/lib/preflight-checks/error-handler"
 import { container, item } from "@/lib/animation"
 import { APP_CONFIG } from "./config"
 import React from "react"
-import { toast } from "sonner"
 import ReactMarkdown from "react-markdown"
+import { useErrorHandler } from "@/app/(ai)/lib/error-handling/client-error-handler"
+import { toastSuccess } from "@/app/(ai)/lib/error-handling/toast-manager"
 
 export default function InlinePromptRewriterTool() {
   const [prompt, setPrompt] = useState("")
   const [response, setResponse] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<any>(null)
+  const { error, handleError, clearError } = useErrorHandler("InlinePromptRewriterTool")
   const abortControllerRef = useRef<AbortController | null>(null)
   
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -38,7 +39,7 @@ export default function InlinePromptRewriterTool() {
     abortControllerRef.current = abortController
     
     setIsLoading(true)
-    setError(null)
+    clearError()
     
     try {
       const response = await fetch(APP_CONFIG.apiRoute, {
@@ -55,40 +56,27 @@ export default function InlinePromptRewriterTool() {
       
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(JSON.stringify(errorData))
+        throw new Error(errorData.error?.message || 'An error occurred during processing')
       }
       
       const data = await response.json()
       
       if (action === 'improve') {
         setPrompt(data.text)
-        toast.success("Prompt improved successfully!")
+        toastSuccess("Prompt improved successfully!")
       } else {
         setResponse(data.text)
+        toastSuccess("Response generated successfully!")
       }
     } catch (error: any) {
-      console.error('Error:', error)
-      
       // Only set error if it's not an abort error
       if (error.name !== 'AbortError') {
-        try {
-          // Parse error message from the API
-          const errorData = JSON.parse(error.message)
-          setError({
-            code: errorData.code,
-            message: errorData.message,
-            severity: errorData.severity || 'error',
-            details: errorData.details
-          })
-        } catch (e) {
-          // Fallback for unparseable errors
-          setError({
-            code: 'unknown_error',
-            message: error.message,
-            severity: 'error',
-            details: {}
-          })
-        }
+        handleError({
+          code: error.code || 'api_error',
+          message: error.message || 'An error occurred during processing',
+          severity: 'error',
+          details: {}
+        })
       }
     } finally {
       if (abortControllerRef.current === abortController) {
@@ -101,7 +89,7 @@ export default function InlinePromptRewriterTool() {
   const handleReset = useCallback(() => {
     setPrompt('')
     setResponse('')
-    setError(null)
+    clearError()
     
     // Cancel any ongoing requests
     if (abortControllerRef.current) {
@@ -109,7 +97,7 @@ export default function InlinePromptRewriterTool() {
       abortControllerRef.current = null
       setIsLoading(false)
     }
-  }, [])
+  }, [clearError])
 
   const errorConfig = error ? getErrorDisplay({
     passed: false,
@@ -149,7 +137,7 @@ export default function InlinePromptRewriterTool() {
               {errorConfig && (
                 <PreflightError 
                   config={errorConfig} 
-                  onClose={() => setError(null)} 
+                  onClose={() => clearError()} 
                 />
               )}
               
@@ -190,7 +178,10 @@ export default function InlinePromptRewriterTool() {
                     disabled={isLoading || !prompt.trim()}
                   >
                     {isLoading ? (
-                      <>Processing...</>
+                      <div className="flex items-center">
+                        <div className="animate-spin mr-2 h-4 w-4 border-b-2 border-primary rounded-full"></div>
+                        Processing...
+                      </div>
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />
@@ -204,7 +195,7 @@ export default function InlinePromptRewriterTool() {
               {response && (
                 <div className="pt-4 border-t">
                   <h3 className="text-lg font-medium mb-2">Response:</h3>
-                  <div className="p-4 rounded-md">
+                  <div className="p-4 rounded-md bg-muted/50">
                     <div className="prose dark:prose-invert"><ReactMarkdown>{response}</ReactMarkdown></div>
                   </div>
                 </div>

@@ -1,3 +1,5 @@
+// /apps/web/app/(ai)/ai-apps/basic-prompt-rewriter/app.tsx
+
 "use client"
 
 import { useState, useCallback } from "react"
@@ -7,15 +9,15 @@ import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { motion } from "framer-motion"
-import { PreflightError } from "@/app/(ai)/components/preflight-error"
-import { getErrorDisplay } from "@/app/(ai)/lib/preflight-checks/error-handler"
 import { container, item } from "@/lib/animation"
 import { APP_CONFIG } from "./config"
 import React from "react"
+import { useErrorHandler } from "@/app/(ai)/lib/error-handling/client-error-handler"
+import { toastSuccess } from "@/app/(ai)/lib/error-handling/toast-manager"
 
 export default function BasicPromptRewriterTool() {
   const [copied, setCopied] = useState(false)
-  const [error, setError] = useState<any>(null)
+  const { error, handleError, clearError } = useErrorHandler("BasicPromptRewriterTool")
   
   const { 
     completion, 
@@ -28,25 +30,11 @@ export default function BasicPromptRewriterTool() {
   } = useCompletion({
     api: APP_CONFIG.apiRoute,
     onError: (error) => {
-      console.error('Completion error:', error)
-      // Handle API errors
-      try {
-        // Parse error message from the API
-        const errorData = JSON.parse(error.message)
-        setError({
-          code: errorData.code,
-          message: errorData.message,
-          severity: errorData.severity || 'error',
-          details: errorData.details
-        })
-      } catch (e) {
-        // Fallback for unparseable errors
-        setError({
-          code: 'unknown_error',
-          message: error.message,
-          severity: 'error',
-          details: {}
-        })
+      handleError(error)
+    },
+    onFinish: () => {
+      if (completion) {
+        toastSuccess("Prompt rewritten successfully!")
       }
     }
   })
@@ -55,6 +43,7 @@ export default function BasicPromptRewriterTool() {
     if (completion) {
       navigator.clipboard.writeText(completion)
       setCopied(true)
+      toastSuccess("Copied to clipboard!")
       setTimeout(() => setCopied(false), 2000)
     }
   }, [completion])
@@ -62,16 +51,8 @@ export default function BasicPromptRewriterTool() {
   const handleReset = useCallback(() => {
     setInput('')
     setCompletion('')
-    setError(null)
-  }, [setInput, setCompletion])
-
-  const errorConfig = error ? getErrorDisplay({
-    passed: false,
-    code: error.code,
-    message: error.message,
-    severity: error.severity,
-    details: error.details
-  }) : null
+    clearError()
+  }, [setInput, setCompletion, clearError])
 
   return (
     <motion.div
@@ -100,13 +81,6 @@ export default function BasicPromptRewriterTool() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-6">
-              {errorConfig && (
-                <PreflightError 
-                  config={errorConfig} 
-                  onClose={() => setError(null)} 
-                />
-              )}
-              
               <form onSubmit={handleSubmit} className="grid gap-4">
                 <Textarea
                   withCounter

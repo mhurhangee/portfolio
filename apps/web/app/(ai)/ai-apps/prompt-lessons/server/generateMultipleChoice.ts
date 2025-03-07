@@ -1,9 +1,24 @@
 import { multipleChoiceExerciseGroup } from '../schema';
 import { generateObject } from 'ai';
 import { APP_CONFIG } from '../config';
+import { createApiError } from '@/app/(ai)/lib/error-handling/api-error-handler';
+import { logger } from '@/app/(ai)/lib/error-handling/logger';
 
 // Generate multiple-choice exercises
-export async function generateMultipleChoiceExercises(exercisePrompt: string) {
+export async function generateMultipleChoiceExercises(exercisePrompt: string, requestId?: string) {
+    const logContext = {
+      function: 'generateMultipleChoiceExercises',
+      promptLength: exercisePrompt?.length || 0,
+      requestId
+    };
+    
+    logger.info('Starting multiple-choice exercise generation', logContext);
+    
+    if (!exercisePrompt?.trim()) {
+      logger.warn('Empty exercise prompt provided', logContext);
+      return []; // Return empty array instead of throwing to allow other exercise types to work
+    }
+    
     const promptText = `
       Generate 1 or 2 multiple-choice exercises about ${exercisePrompt}.
       
@@ -15,6 +30,12 @@ export async function generateMultipleChoiceExercises(exercisePrompt: string) {
     `;
     
     try {
+      logger.info('Generating multiple-choice exercises with AI', {
+        ...logContext,
+        model: APP_CONFIG.model,
+        temperature: APP_CONFIG.temperature
+      });
+      
       const result = await generateObject({
         model: APP_CONFIG.model,
         system: APP_CONFIG.systemPrompt,
@@ -24,18 +45,27 @@ export async function generateMultipleChoiceExercises(exercisePrompt: string) {
         maxTokens: APP_CONFIG.maxTokens,
       });
       
-      // Add debug logging
-      console.log("Multiple-choice result:", JSON.stringify(result));
-      
       // Make sure we handle the result properly
       if (!result || !result.object) {
-        console.error("Empty multiple-choice generation result");
+        logger.warn('Empty multiple-choice generation result', logContext);
         return [];
       }
       
-      return result.object.exercises;
+      const exercises = result.object.exercises || [];
+      
+      logger.info('Successfully generated multiple-choice exercises', {
+        ...logContext,
+        count: exercises.length
+      });
+      
+      return exercises;
     } catch (error) {
-      console.error("Error generating multiple-choice exercises:", error);
+      logger.error('Error generating multiple-choice exercises', {
+        ...logContext,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      
+      // Return empty array instead of throwing to allow other exercise types to work
       return [];
     }
   }

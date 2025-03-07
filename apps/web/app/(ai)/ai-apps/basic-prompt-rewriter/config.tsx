@@ -1,6 +1,7 @@
 import { AITool } from "@/app/(ai)/lib/types"
 import { PenLine } from "lucide-react"
 import { DEFAULT_CONFIG } from "@/app/(ai)/lib/defaults"
+import { logger } from '@/app/(ai)/lib/error-handling/logger'
 
 export const APP_CONFIG: AITool = {
     id: "basic-prompt-rewriter",
@@ -29,3 +30,44 @@ Return only the rewritten prompt without explanation, commentary, or surrounding
     temperature: DEFAULT_CONFIG.temperature,
     maxTokens: DEFAULT_CONFIG.maxTokens
   }
+
+    // Configure preflight checks for this specific route
+export const PREFLIGHT_CONFIG = {/*
+        // Only run tier 1 and 2 checks (skip more expensive checks)
+        tiers: [1, 2, 3],
+        
+        // Customize specific checks
+        checks: {
+          // Disable language check for this route (we accept all languages)
+          'language_check': false
+        },
+        
+        // Configure specific check parameters
+        checkConfig: {
+          // Allow longer inputs for this route
+          'input_length': {
+            minLength: 2,  // Allow shorter prompts
+            maxLength: 2000 // Allow longer prompts
+          },
+          
+          // Customize content moderation settings
+          'content_moderation': {
+            // Only strictly moderate these categories
+            strictCategories: ['sexual/minors', 'hate/threatening', 'self-harm/intent'],
+            // Be more lenient with these categories
+            configurableCategories: ['sexual', 'hate', 'violence', 'harassment'],
+            // Higher threshold for flagging
+            threshold: 0.9
+          }
+        },
+        
+        // Provide conversation context for AI-based checks
+        conversationContext: {
+          systemPrompt: APP_CONFIG.systemPrompt,
+          purpose: 'prompt rewriting',
+          appName: 'basic-prompt-rewriter'
+        },
+        
+        // Use the same logger instance
+        logger*/
+      };

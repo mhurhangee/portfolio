@@ -3,64 +3,102 @@ import { generateObject } from 'ai';
 import { APP_CONFIG } from './config';
 import { keywordsExtractionSchema } from './schema';
 import { runPreflightChecks } from '@/app/(ai)/lib/preflight-checks/preflight-checks';
-import { handlePreflightError } from '@/app/(ai)/lib/preflight-checks/error-handler';
 import { getUserInfo } from '../../lib/user-identification';
+import { createApiHandler, createApiError } from '@/app/(ai)/lib/error-handling/api-error-handler';
+import { logger } from '@/app/(ai)/lib/error-handling/logger';
 
 export const runtime = 'edge';
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest, requestId: string) {
   try {
-    // Extract the prompt string directly from the request body
+    // Get request information for context
+    const { userId, ip, userAgent } = await getUserInfo(req);
+    const requestContext = {
+      path: req.nextUrl.pathname,
+      method: req.method,
+      userId,
+      ip,
+      userAgent,
+      requestId
+    };
+    
+    // Log the start of request processing
+    logger.info('Starting keyword extractor request processing', requestContext);
+    
+    // Extract the request body
     const { keywordType, userPrompt } = await req.json();
-    console.log("Received prompt:", userPrompt.slice(0, 50) + '...');
+    
+    // Log the incoming request with prompt details
+    logger.info('Processing keyword extraction request', {
+      ...requestContext,
+      keywordType,
+      promptLength: userPrompt?.length,
+      promptPreview: userPrompt ? userPrompt.substring(0, 50) + (userPrompt.length > 50 ? '...' : '') : 'empty'
+    });
     
     // Input validation
     if (!userPrompt || typeof userPrompt !== 'string') {
-      console.error('Error: Invalid prompt format', typeof userPrompt);
-      return Response.json(
-        { 
-          error: { 
-            code: 'invalid_request', 
-            message: 'Missing or invalid prompt parameter', 
-            severity: 'error' 
-          } 
-        },
-        { status: 400 }
+      logger.warn('Invalid prompt format', {
+        ...requestContext,
+        promptType: typeof userPrompt
+      });
+      
+      throw createApiError(
+        'validation_error',
+        'Missing or invalid prompt parameter',
+        'error',
+        { promptType: typeof userPrompt }
       );
     }
 
     if (userPrompt.trim() === '') {
-      console.error('Error: Empty prompt string');
-      return Response.json(
-        { 
-          error: { 
-            code: 'invalid_request', 
-            message: 'Prompt cannot be empty', 
-            severity: 'error' 
-          } 
-        },
-        { status: 400 }
+      logger.warn('Empty prompt string', requestContext);
+      
+      throw createApiError(
+        'validation_error',
+        'Prompt cannot be empty',
+        'error'
       );
     }
 
-    console.log("Starting preflight checks...");
-
-    // Get user information from request including ID, IP, and user agent
-    const { userId, ip, userAgent } = await getUserInfo(req);
+    // Run preflight checks
+    logger.debug('Running preflight checks', requestContext);
     
     // Run preflight checks with full user context
     const preflightResult = await runPreflightChecks(userId, userPrompt, ip, userAgent);
     
-    // If preflight checks fail, return the error
+    // Log the results of preflight checks
+    logger.info('Preflight check results', {
+      ...requestContext,
+      passed: preflightResult.passed,
+      failedCheck: preflightResult.failedCheck,
+      executionTimeMs: preflightResult.executionTimeMs
+    });
+    
+    // If preflight checks fail, throw a structured error
     if (!preflightResult.passed && preflightResult.result) {
-      console.log("Preflight checks failed:", preflightResult.result);
-      const errorResponse = handlePreflightError(preflightResult.result);
-      return Response.json(errorResponse, { status: 400 });
+      const { code, message, severity, details } = preflightResult.result;
+      
+      logger.warn(`Preflight check failed: ${code}`, {
+        ...requestContext,
+        message,
+        severity,
+        details
+      });
+      
+      throw createApiError(code, message, severity, details);
     }
 
-    console.log("Preflight checks passed, generating response...");
+    // Log that we're calling the AI service
+    logger.info('Calling AI service for keyword extraction', {
+      ...requestContext,
+      model: APP_CONFIG.model,
+      keywordType,
+      temperature: APP_CONFIG.temperature,
+      maxTokens: APP_CONFIG.maxTokens
+    });
 
-    // If all checks pass, generate the object (non-streaming)
+    // Generate the object (non-streaming)
     const result = await generateObject({
       model: APP_CONFIG.model,
       system: APP_CONFIG.systemPrompt,
@@ -70,23 +108,21 @@ export async function POST(req: NextRequest) {
       maxTokens: APP_CONFIG.maxTokens,
     });
 
-    console.log("Response generated successfully");
+    // Log successful completion
+    logger.info('Successfully processed keyword extraction request', {
+      ...requestContext,
+      status: 'completed',
+      keywordCount: result.object.keywords?.length || 0
+    });
     
     // Return the result as JSON
     return Response.json(result.object);
     
-  } catch (error: any) {
-    console.error('Error in keyword extractor API:', error);
-    
-    return Response.json(
-      { 
-        error: { 
-          code: 'api_error', 
-          message: error.message || 'An error occurred while processing your request', 
-          severity: 'error' 
-        } 
-      },
-      { status: 500 }
-    );
+  } catch (error) {
+    // Error will be handled by the createApiHandler wrapper
+    throw error;
   }
 }
+
+// Export the wrapped handler with automatic log flushing and error handling
+export const POST = createApiHandler(handler);

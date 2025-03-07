@@ -1,9 +1,23 @@
 import { improveExerciseGroup } from '../schema';
 import { generateObject } from 'ai';
 import { APP_CONFIG } from '../config';
+import { logger } from '@/app/(ai)/lib/error-handling/logger';
 
-// Generate fill-in-blank exercises
-export async function generateImproveExercises(exercisePrompt: string) {
+// Generate improve exercises
+export async function generateImproveExercises(exercisePrompt: string, requestId?: string) {
+    const logContext = {
+      function: 'generateImproveExercises',
+      promptLength: exercisePrompt?.length || 0,
+      requestId
+    };
+    
+    logger.info('Starting improve exercise generation', logContext);
+    
+    if (!exercisePrompt?.trim()) {
+      logger.warn('Empty exercise prompt provided', logContext);
+      return []; // Return empty array instead of throwing to allow other exercise types to work
+    }
+    
     const promptText = `
     Generate 1 improve exercise about the following topic:
     
@@ -19,6 +33,12 @@ export async function generateImproveExercises(exercisePrompt: string) {
   `;
     
     try {
+      logger.info('Generating improve exercises with AI', {
+        ...logContext,
+        model: APP_CONFIG.model,
+        temperature: APP_CONFIG.temperature
+      });
+      
       const result = await generateObject({
         model: APP_CONFIG.model,
         system: APP_CONFIG.systemPrompt,
@@ -30,13 +50,25 @@ export async function generateImproveExercises(exercisePrompt: string) {
       
       // Make sure we handle the result properly
       if (!result || !result.object) {
-        console.error("Empty improve generation result");
+        logger.warn('Empty improve generation result', logContext);
         return [];
       }
       
-      return result.object.exercises;
+      const exercises = result.object.exercises || [];
+      
+      logger.info('Successfully generated improve exercises', {
+        ...logContext,
+        count: exercises.length
+      });
+      
+      return exercises;
     } catch (error) {
-      console.error("Error generating improve exercises:", error);
+      logger.error('Error generating improve exercises', {
+        ...logContext,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      
+      // Return empty array instead of throwing to allow other exercise types to work
       return [];
     }
   }
