@@ -1,3 +1,8 @@
+// next.config.mjs
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { withLogtail } = require('@logtail/next');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@workspace/ui", "@workspace/blog"],
@@ -11,6 +16,4 @@ const nextConfig = {
   },
 }
 
-
-
-export default nextConfig
+export default withLogtail(nextConfig);

@@ -1,7 +1,7 @@
-import { BlogLayout } from '@/components/blog/blog-post-layout'
-import { calculateReadingTime } from '@/lib/blog/utils'
+import { BlogLayout } from '@/app/(blog)/components/blog-post-layout'
+import { calculateReadingTime } from '@/app/(blog)/lib/utils'
 import { MDXRemote } from 'next-mdx-remote/rsc'
-import { getPost, getPosts } from '../actions'
+import { getPost, getPosts } from '@/app/(blog)/blog/actions'
 import { Metadata } from 'next'
 
 export const dynamic = 'force-static'
@@ -25,12 +25,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `aiconsult.uk - ${post.title}`,
     description: post.description,
     keywords: post.tags,
-    authors: [{ name: 'Michael Hurhangee' }],
+    authors: [{ name: "Michael Hurhangee" }],
     openGraph: {
       title: post.title,
       description: post.description,
       type: 'article',
-      authors: ['Michael Hurhangee'],
+      authors: ["Michael Hurhangee"],
       tags: post.tags,
     },
     twitter: {
@@ -73,7 +73,8 @@ export default async function BlogPostPage({
       prevPost={prevPost}
       nextPost={nextPost}
     >
-      <MDXRemote source={post.content} />
+      <MDXRemote source={post.content}
+       />
     </BlogLayout>
   )
 }

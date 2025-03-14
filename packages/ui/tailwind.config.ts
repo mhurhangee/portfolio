@@ -102,12 +102,30 @@ const config = {
   					opacity: '1',
   					transform: 'translateX(0)'
   				}
+  			},
+  			'accordion-down': {
+  				from: {
+  					height: '0'
+  				},
+  				to: {
+  					height: 'var(--radix-accordion-content-height)'
+  				}
+  			},
+  			'accordion-up': {
+  				from: {
+  					height: 'var(--radix-accordion-content-height)'
+  				},
+  				to: {
+  					height: '0'
+  				}
   			}
   		},
   		animation: {
   			'fade-up': 'fade-up 0.5s ease-out',
   			'fade-down': 'fade-down 0.5s ease-out',
-  			'slide-in': 'slide-in 0.5s ease-out'
+  			'slide-in': 'slide-in 0.5s ease-out',
+  			'accordion-down': 'accordion-down 0.2s ease-out',
+  			'accordion-up': 'accordion-up 0.2s ease-out'
   		}
   	}
   },

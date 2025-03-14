@@ -1,19 +1,15 @@
 "use client"
 
-import { Hero } from "@/components/aboutme/mehero"
-import { ExpertiseAndAchievements } from "@/components/aboutme/expertise"
-import { ContactMe } from "@/components/aboutme/contactme"
-import { MyStory } from "@/components/aboutme/mystory"
-import { Services } from "@/components/aboutme/services"
-import { Section } from "@/components/aboutme/section"
-import { SectionProvider } from "@/components/aboutme/sectioncontext"
-import { MainNav } from "@/components/main-nav"
+import { Hero } from "@/app/(aboutme)/components/mehero"
+import { ExpertiseAndAchievements } from "@/app/(aboutme)/components/expertise"
+import { ContactMe } from "@/app/(aboutme)/components/contactme"
+import { MyStory } from "@/app/(aboutme)/components/mystory"
+import { Services } from "@/app/(aboutme)/components/services"
+import { Section } from "@/app/(aboutme)/components/section"
 
 export default function Home() {
     return (
-      <SectionProvider>
         <div className="min-h-screen">
-          <MainNav />
           <div className="space-y-16">
             <Section id="hero">
               <Hero />
@@ -32,6 +28,5 @@ export default function Home() {
             </Section>
           </div>
         </div>
-      </SectionProvider>
     )
 }

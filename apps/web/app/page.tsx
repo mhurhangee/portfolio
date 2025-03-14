@@ -6,12 +6,10 @@ import { motion } from "framer-motion"
 import { FlipWords } from "@workspace/ui/components/flipwords"
 import { User2, Bot, BookText } from "lucide-react"
 import { container, item } from "@/lib/animation"
-import { MainNav } from "@/components/main-nav"
 
 export default function Home() {
   return (
     <>
-      <MainNav />
       <div className="flex min-h-[100dvh] flex-col items-center justify-center p-4 sm:p-6">
         <motion.div
           variants={container}
